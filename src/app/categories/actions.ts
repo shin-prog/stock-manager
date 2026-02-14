@@ -28,6 +28,16 @@ export async function createCategory(formData: FormData) {
   redirect('/categories');
 }
 
+export async function updateCategoriesOrder(items: { id: string, sort_order: number }[]) {
+  const supabase = await createClient();
+  for (const item of items) {
+    await supabase.from('categories').update({ sort_order: item.sort_order }).eq('id', item.id);
+  }
+  revalidatePath('/categories');
+  revalidatePath('/products');
+  revalidatePath('/inventory');
+}
+
 export async function updateCategoryOrder(id: string, newOrder: number) {
   const supabase = await createClient();
   await supabase.from('categories').update({ sort_order: newOrder }).eq('id', id);

@@ -32,6 +32,19 @@ export async function createStore(formData: FormData) {
   redirect('/stores');
 }
 
+export async function updateStoresOrder(items: { id: string, sort_order: number }[]) {
+  const supabase = await createClient();
+  
+  for (const item of items) {
+    await supabase
+      .from('stores')
+      .update({ sort_order: item.sort_order })
+      .eq('id', item.id);
+  }
+
+  revalidatePath('/stores');
+}
+
 export async function updateStoreOrder(id: string, newOrder: number) {
   const supabase = await createClient();
   const { error } = await supabase
