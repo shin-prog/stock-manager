@@ -53,8 +53,8 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="desc">在庫が多い順</SelectItem>
-              <SelectItem value="asc">在庫が少ない順</SelectItem>
+              <SelectItem value="desc">在庫数降順</SelectItem>
+              <SelectItem value="asc">在庫数昇順</SelectItem>
             </SelectContent>
           </Select>
         </div>

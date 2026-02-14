@@ -22,11 +22,11 @@ export async function submitPurchase(formData: any) {
     const { error: lError } = await supabase.from('purchase_lines').insert({
       purchase_id: purchase.id,
       product_id: line.productId,
-      unit_id: line.unitId,
+      unit_id: line.unitId || null, // Allow NULL if empty string
       quantity: line.quantity,
       unit_price: line.price,
       line_cost: line.quantity * line.price,
-      size_info: line.sizeInfo // Add this
+      size_info: line.sizeInfo
     });
     if (lError) throw new Error(lError.message);
 
@@ -59,34 +59,22 @@ export async function submitPurchase(formData: any) {
 export async function deletePurchaseLine(id: string, productId: string) {
   const supabase = await createClient();
 
-  // 1. Get quantity to adjust stock back
-  const { data: line } = await supabase
-    .from('purchase_lines')
-    .select('quantity')
-    .eq('id', id)
-    .single();
-
-  if (line) {
-    // 2. Subtract from stock
-    const { data: stock } = await supabase
-      .from('stock')
-      .select('id, quantity')
-      .eq('product_id', productId)
-      .single();
-
-    if (stock) {
-      await supabase
-        .from('stock')
-        .update({ quantity: Number(stock.quantity) - Number(line.quantity) })
-        .eq('id', stock.id);
-    }
-
-    // 3. Delete the line
-    await supabase.from('purchase_lines').delete().eq('id', id);
-  }
+  // 価格履歴の削除時は在庫数を変更しない（ユーザー要望）
+  await supabase.from('purchase_lines').delete().eq('id', id);
 
   revalidatePath(`/products/${productId}`);
   revalidatePath('/inventory');
+}
+
+export async function updatePurchaseLineSizeInfo(id: string, productId: string, sizeInfo: string) {
+  const supabase = await createClient();
+
+  await supabase
+    .from('purchase_lines')
+    .update({ size_info: sizeInfo })
+    .eq('id', id);
+
+  revalidatePath(`/products/${productId}`);
 }
 
 export async function adjustStock(productId: string, amount: number, reason: string = 'consumed') {

@@ -30,6 +30,11 @@ export function MobileNav() {
         <Store size={24} />
         <span className="text-xs">お店</span>
       </Link>
+
+      <Link href="/categories" className={`flex flex-col items-center p-2 ${isActive('/categories') ? 'text-blue-600' : 'text-gray-500'}`}>
+        <List size={24} />
+        <span className="text-xs">カテゴリ</span>
+      </Link>
     </div>
   );
 }

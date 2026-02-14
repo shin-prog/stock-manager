@@ -8,13 +8,13 @@ export async function createProduct(formData: FormData) {
   const supabase = await createClient();
   
   const name = formData.get('name') as string;
-  const category = formData.get('category') as string;
+  const categoryId = formData.get('categoryId') as string;
   const defaultUnitId = formData.get('defaultUnitId') as string;
   const minStock = Number(formData.get('minStock'));
 
   const { error } = await supabase.from('products').insert({
     name,
-    category,
+    category_id: categoryId === 'none' || !categoryId ? null : categoryId,
     default_unit_id: defaultUnitId,
     min_stock_threshold: minStock
   });
@@ -27,11 +27,11 @@ export async function createProduct(formData: FormData) {
   redirect('/products');
 }
 
-export async function updateProductCategory(id: string, category: string) {
+export async function updateProductCategory(id: string, categoryId: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from('products')
-    .update({ category })
+    .update({ category_id: categoryId === 'none' ? null : categoryId })
     .eq('id', id);
 
   if (error) {
@@ -60,7 +60,6 @@ export async function deleteProduct(formData: FormData) {
   const supabase = await createClient();
   const id = formData.get('id') as string;
 
-  // 手動で関連データを削除（DB側の設定が間に合わない場合の安全策）
   await supabase.from('purchase_lines').delete().eq('product_id', id);
   await supabase.from('stock_adjustments').delete().eq('product_id', id);
   await supabase.from('stock').delete().eq('product_id', id);

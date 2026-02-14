@@ -9,7 +9,7 @@ export function DeletePurchaseButton({ id, productId }: { id: string, productId:
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (confirm('この購入記録を削除しますか？在庫数も自動で差し引かれます。')) {
+    if (confirm('この購入記録を削除しますか？（在庫数は変更されません）')) {
       setLoading(true);
       try {
         await deletePurchaseLine(id, productId);

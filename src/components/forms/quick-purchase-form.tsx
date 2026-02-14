@@ -7,13 +7,23 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { submitPurchase } from '@/app/actions';
 
-export function QuickPurchaseForm({ productId, stores }: { productId: string, stores: any[] }) {
+import { useTransition } from 'react';
+
+export function QuickPurchaseForm({ 
+  productId, 
+  stores,
+  lastStoreId
+}: { 
+  productId: string, 
+  stores: any[],
+  lastStoreId?: string
+}) {
+  const [isPending, startTransition] = useTransition();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [storeId, setStoreId] = useState('');
+  const [storeId, setStoreId] = useState(lastStoreId || '');
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState<string>('');
   const [sizeInfo, setSizeInfo] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!storeId) {
@@ -25,27 +35,27 @@ export function QuickPurchaseForm({ productId, stores }: { productId: string, st
       return;
     }
 
-    setLoading(true);
-    try {
-      await submitPurchase({
-        storeId,
-        date,
-        lines: [{ 
-          productId, 
-          quantity, 
-          price: Number(price), 
-          sizeInfo,
-          unitId: '' // Not used but required by structure
-        }] 
-      });
-      alert('購入を登録しました！');
-      setPrice('');
-      setSizeInfo('');
-    } catch (error) {
-      alert('エラーが発生しました: ' + (error as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      try {
+        await submitPurchase({
+          storeId,
+          date,
+          lines: [{ 
+            productId, 
+            quantity, 
+            price: Number(price), 
+            sizeInfo,
+            unitId: '' 
+          }] 
+        });
+        setPrice('');
+        setSizeInfo('');
+      } catch (error) {
+        if (!(error as any).digest?.startsWith('NEXT_REDIRECT')) {
+          alert('エラーが発生しました: ' + (error as Error).message);
+        }
+      }
+    });
   };
 
   return (
@@ -97,8 +107,8 @@ export function QuickPurchaseForm({ productId, stores }: { productId: string, st
         />
       </div>
 
-      <Button onClick={handleSubmit} className="w-full" disabled={loading}>
-        {loading ? '登録中...' : 'この内容で購入登録する'}
+      <Button onClick={handleSubmit} className="w-full" disabled={isPending}>
+        {isPending ? '登録中...' : 'この内容で購入登録する'}
       </Button>
     </div>
   );

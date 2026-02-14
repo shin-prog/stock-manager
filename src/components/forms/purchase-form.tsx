@@ -1,15 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { submitPurchase } from '@/app/actions';
 
-export function PurchaseForm({ products, stores, units }: { products: any[], stores: any[], units: any[] }) {
+export function PurchaseForm({ 
+  products, 
+  stores, 
+  units, 
+  lastStoreId 
+}: { 
+  products: any[], 
+  stores: any[], 
+  units: any[],
+  lastStoreId?: string
+}) {
+  const [isPending, startTransition] = useTransition();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [storeId, setStoreId] = useState('');
+  const [storeId, setStoreId] = useState(lastStoreId || '');
   const [line, setLine] = useState({ productId: '', unitId: '', quantity: 1, price: '' as any, sizeInfo: '' });
 
   const updateLine = (field: string, value: any) => {
@@ -30,19 +41,23 @@ export function PurchaseForm({ products, stores, units }: { products: any[], sto
       alert('単価を入力してください');
       return;
     }
-    try {
-      await submitPurchase({
-        storeId,
-        date,
-        lines: [{ ...line, price: Number(line.price) }] 
-      });
-      alert('登録しました！');
-      // Reset form
-      setLine({ productId: '', unitId: '', quantity: 1, price: '', sizeInfo: '' });
-      setStoreId('');
-    } catch (error) {
-      alert('エラーが発生しました: ' + (error as Error).message);
-    }
+    
+    startTransition(async () => {
+      try {
+        await submitPurchase({
+          storeId,
+          date,
+          lines: [{ ...line, price: Number(line.price) }] 
+        });
+        // Reset form
+        setLine({ productId: '', unitId: '', quantity: 1, price: '', sizeInfo: '' });
+      } catch (error) {
+        // Only alert if it's NOT a redirect error
+        if (!(error as any).digest?.startsWith('NEXT_REDIRECT')) {
+          alert('エラーが発生しました: ' + (error as Error).message);
+        }
+      }
+    });
   };
 
   return (
@@ -110,7 +125,14 @@ export function PurchaseForm({ products, stores, units }: { products: any[], sto
         </div>
       </div>
 
-      <Button onClick={handleSubmit} className="w-full" size="lg">登録する</Button>
+      <Button 
+        onClick={handleSubmit} 
+        className="w-full" 
+        size="lg" 
+        disabled={isPending}
+      >
+        {isPending ? '登録中...' : '登録する'}
+      </Button>
     </div>
   );
 }

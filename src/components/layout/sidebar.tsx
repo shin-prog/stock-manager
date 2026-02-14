@@ -24,6 +24,9 @@ export function Sidebar() {
       <Link href="/stores">
         <Button className="w-full justify-start" variant="ghost">お店一覧</Button>
       </Link>
+      <Link href="/categories">
+        <Button className="w-full justify-start" variant="ghost">カテゴリ一覧</Button>
+      </Link>
       {/* Units hidden per request */}
     </div>
   )

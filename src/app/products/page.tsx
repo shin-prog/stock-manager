@@ -15,7 +15,8 @@ import { CategorySelect } from '@/components/products/category-select';
 
 export default async function ProductsPage() {
   const supabase = await createClient();
-  const { data: products } = await supabase.from('products').select('*');
+  const { data: products } = await supabase.from('products').select('*').order('name');
+  const { data: categories } = await supabase.from('categories').select('*').order('sort_order');
 
   return (
     <div className="space-y-6">
@@ -45,7 +46,11 @@ export default async function ProductsPage() {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <CategorySelect id={product.id} initialCategory={product.category || ''} />
+                  <CategorySelect 
+                    id={product.id} 
+                    initialCategoryId={product.category_id} 
+                    categories={categories || []} 
+                  />
                 </TableCell>
                 <TableCell>{product.min_stock_threshold}</TableCell>
                 <TableCell className="text-right">

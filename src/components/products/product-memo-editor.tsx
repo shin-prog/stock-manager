@@ -24,16 +24,16 @@ export function ProductMemoEditor({ id, initialMemo }: { id: string, initialMemo
 
   if (!isEditing) {
     return (
-      <div className="group relative bg-amber-50 border border-amber-100 rounded-md p-3 text-sm text-amber-900 mb-6">
+      <div className="bg-amber-50 border border-amber-100 rounded-md p-3 text-sm text-amber-900 mb-6">
         <div className="flex justify-between items-start">
           <div className="whitespace-pre-wrap">{memo || 'メモを入力してください...'}</div>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setIsEditing(true)}
-            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-8 w-8 p-0 text-amber-700 hover:bg-amber-100 shrink-0"
           >
-            <Pencil size={14} />
+            <Pencil size={16} />
           </Button>
         </div>
       </div>

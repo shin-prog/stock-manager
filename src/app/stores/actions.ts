@@ -9,8 +9,19 @@ export async function createStore(formData: FormData) {
   
   const name = formData.get('name') as string;
 
+  // 最新の sort_order を取得して +1 する
+  const { data: latest } = await supabase
+    .from('stores')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .single();
+  
+  const nextOrder = (latest?.sort_order || 0) + 1;
+
   const { error } = await supabase.from('stores').insert({
     name,
+    sort_order: nextOrder
   });
 
   if (error) {
@@ -19,6 +30,20 @@ export async function createStore(formData: FormData) {
 
   revalidatePath('/stores');
   redirect('/stores');
+}
+
+export async function updateStoreOrder(id: string, newOrder: number) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('stores')
+    .update({ sort_order: newOrder })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/stores');
 }
 
 export async function deleteStore(formData: FormData) {

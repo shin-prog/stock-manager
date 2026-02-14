@@ -12,7 +12,7 @@ export default async function InventoryPage() {
       quantity,
       products (
         name,
-        category,
+        category_id,
         units (
           symbol
         )
@@ -25,18 +25,19 @@ export default async function InventoryPage() {
     return <div>Error loading inventory</div>;
   }
 
+  const { data: categoriesData } = await supabase.from('categories').select('*').order('sort_order');
+  const categoriesMap = new Map((categoriesData || []).map(c => [c.id, c.name]));
+
   // Transform data for the component
   const stockItems = stockData.map((item: any) => ({
     product_id: item.product_id,
     product_name: item.products?.name || 'Unknown Product',
-    category: item.products?.category || '未分類',
+    category: categoriesMap.get(item.products?.category_id) || '未分類',
     quantity: item.quantity,
     unit_symbol: item.products?.units?.symbol || '',
   }));
 
-  const standardCategories = ["キッチン", "お風呂", "掃除", "パントリー", "日用品"];
-  // 既存のデータにあるカテゴリもマージ（標準以外があれば追加）
-  const categories = Array.from(new Set([...standardCategories, ...stockItems.map(item => item.category)]));
+  const categories = (categoriesData || []).map(c => c.name);
 
   return (
     <div className="container mx-auto p-4 max-w-lg">

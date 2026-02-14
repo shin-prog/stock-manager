@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { normalizePrice } from '@/lib/logic';
 import { ProductUnit } from '@/types';
 import { DeletePurchaseButton } from './delete-purchase-button';
+import { SizeInfoEditor } from './size-info-editor';
 
 export async function PriceHistoryList({ productId }: { productId: string }) {
   const supabase = await createClient();
@@ -47,8 +48,9 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
           <div key={i} className="p-3 flex justify-between items-center group">
             <div>
               <div className="font-medium">{item.store}</div>
-              <div className="text-xs text-gray-500">
-                {item.date} {item.sizeInfo && `(${item.sizeInfo})`}
+              <div className="text-xs text-gray-500 flex items-center gap-1">
+                {item.date} 
+                <SizeInfoEditor id={item.id} productId={productId} initialSizeInfo={item.sizeInfo || ''} />
               </div>
             </div>
             <div className="flex items-center gap-3">
