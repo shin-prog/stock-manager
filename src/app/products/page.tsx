@@ -33,7 +33,6 @@ export default async function ProductsPage() {
             <TableRow>
               <TableHead>商品名</TableHead>
               <TableHead>カテゴリ</TableHead>
-              <TableHead>最低在庫</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -52,7 +51,6 @@ export default async function ProductsPage() {
                     categories={categories || []} 
                   />
                 </TableCell>
-                <TableCell>{product.min_stock_threshold}</TableCell>
                 <TableCell className="text-right">
                   <DeleteProductButton id={product.id} />
                 </TableCell>
@@ -60,7 +58,7 @@ export default async function ProductsPage() {
             ))}
             {products?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                <TableCell colSpan={3} className="text-center py-4 text-gray-500">
                   商品がありません。右上のボタンから追加してください。
                 </TableCell>
               </TableRow>

@@ -41,11 +41,6 @@ export function ProductForm({ units, categories }: { units: any[], categories: a
       {/* Hidden Unit Selection (Default to 'Piece' / '個') */}
       <input type="hidden" name="defaultUnitId" value={units.find(u => u.symbol === 'pc' || u.symbol === '個')?.id || units[0]?.id} />
 
-      <div className="space-y-2">
-        <Label htmlFor="minStock">最低在庫数 (アラート用)</Label>
-        <Input id="minStock" name="minStock" type="number" defaultValue={1} />
-      </div>
-
       <SubmitButton className="w-full">登録する</SubmitButton>
     </form>
   );

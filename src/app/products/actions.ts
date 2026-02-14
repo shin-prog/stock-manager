@@ -10,13 +10,11 @@ export async function createProduct(formData: FormData) {
   const name = formData.get('name') as string;
   const categoryId = formData.get('categoryId') as string;
   const defaultUnitId = formData.get('defaultUnitId') as string;
-  const minStock = Number(formData.get('minStock'));
 
   const { error } = await supabase.from('products').insert({
     name,
     category_id: categoryId === 'none' || !categoryId ? null : categoryId,
     default_unit_id: defaultUnitId,
-    min_stock_threshold: minStock
   });
 
   if (error) {

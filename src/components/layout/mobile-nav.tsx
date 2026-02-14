@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, ShoppingCart, List, Store } from 'lucide-react';
+import { Package, List, Store } from 'lucide-react';
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -16,11 +16,6 @@ export function MobileNav() {
         <span className="text-xs">在庫</span>
       </Link>
       
-      <Link href="/purchases/new" className={`flex flex-col items-center p-2 ${isActive('/purchases') ? 'text-blue-600' : 'text-gray-500'}`}>
-        <ShoppingCart size={24} />
-        <span className="text-xs">買い物</span>
-      </Link>
-
       <Link href="/products" className={`flex flex-col items-center p-2 ${isActive('/products') ? 'text-blue-600' : 'text-gray-500'}`}>
         <List size={24} />
         <span className="text-xs">商品</span>

@@ -53,7 +53,6 @@ export async function submitPurchase(formData: any) {
   }
 
   revalidatePath('/inventory');
-  revalidatePath('/purchases');
 }
 
 export async function deletePurchaseLine(id: string, productId: string) {
