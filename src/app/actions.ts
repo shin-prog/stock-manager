@@ -3,6 +3,23 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+async function updateStockQuantity(supabase: any, productId: string, delta: number) {
+  const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
+
+  if (stock) {
+    await supabase.from('stock').update({ 
+      quantity: Number(stock.quantity) + delta,
+      last_updated: new Date().toISOString()
+    }).eq('id', stock.id);
+  } else {
+    await supabase.from('stock').insert({
+      product_id: productId,
+      quantity: delta,
+      last_updated: new Date().toISOString()
+    });
+  }
+}
+
 export async function submitPurchase(formData: any) {
   const supabase = await createClient();
   const { storeId, date, lines } = formData;
@@ -30,26 +47,8 @@ export async function submitPurchase(formData: any) {
     });
     if (lError) throw new Error(lError.message);
 
-    // qtyInBase is now discrete items (1 bottle, 2 bottles...)
-    const qtyInBase = line.quantity; 
-
     // Update Stock
-
-    // Check if stock record exists
-    const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', line.productId).single();
-
-    if (stock) {
-      await supabase.from('stock').update({ 
-        quantity: Number(stock.quantity) + qtyInBase,
-        last_updated: new Date().toISOString()
-      }).eq('id', stock.id);
-    } else {
-      await supabase.from('stock').insert({
-        product_id: line.productId,
-        quantity: qtyInBase,
-        last_updated: new Date().toISOString()
-      });
-    }
+    await updateStockQuantity(supabase, line.productId, Number(line.quantity));
   }
 
   revalidatePath('/inventory');
@@ -88,22 +87,7 @@ export async function adjustStock(productId: string, amount: number, reason: str
   });
 
   // 2. Update Snapshot
-  const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
-
-  if (stock) {
-    const newQty = Number(stock.quantity) + amount;
-    await supabase.from('stock').update({ 
-      quantity: newQty,
-      last_updated: new Date().toISOString()
-    }).eq('id', stock.id);
-  } else {
-    // If no stock record, create one (assuming starting from 0)
-    await supabase.from('stock').insert({
-      product_id: productId,
-      quantity: amount,
-      last_updated: new Date().toISOString()
-    });
-  }
+  await updateStockQuantity(supabase, productId, amount);
 
   revalidatePath('/inventory');
 }

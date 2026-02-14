@@ -4,6 +4,7 @@ import { useState, useOptimistic, startTransition } from 'react';
 import { adjustStock } from '@/app/actions';
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 
 import Link from 'next/link';
 
@@ -50,9 +51,8 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 mb-4 bg-slate-100 p-3 rounded-lg border border-slate-300 text-sm shadow-sm">
-        <div className="flex items-center gap-1">
-          <div className="font-bold text-slate-700">カテゴリ:</div>
+      <FilterPanel>
+        <FilterItem label="カテゴリ:">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
               <SelectValue placeholder="選択" />
@@ -64,10 +64,9 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FilterItem>
 
-        <div className="flex items-center gap-1">
-          <div className="font-bold text-slate-700">順序:</div>
+        <FilterItem label="順序:">
           <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
             <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
               <SelectValue />
@@ -77,8 +76,8 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
               <SelectItem value="asc">少ない順</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
+        </FilterItem>
+      </FilterPanel>
 
       {filteredItems.map((item) => (
         <div key={item.product_id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">

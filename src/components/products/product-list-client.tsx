@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { DeleteProductButton } from '@/components/products/delete-product-button';
 import { CategorySelect } from '@/components/products/category-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 
 export function ProductListClient({ 
   products, 
@@ -33,21 +34,22 @@ export function ProductListClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg border border-slate-300 text-sm shadow-sm">
-        <span className="font-bold text-slate-700">カテゴリ絞り込み:</span>
-        <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-          <SelectTrigger className="w-[180px] bg-white border-slate-400 h-9">
-            <SelectValue placeholder="すべて" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border-slate-300 shadow-lg">
-            <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="none">未分類</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterPanel>
+        <FilterItem label="カテゴリ絞り込み:">
+          <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+            <SelectTrigger className="w-[180px] bg-white border-slate-400 h-9">
+              <SelectValue placeholder="すべて" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-300 shadow-lg">
+              <SelectItem value="all">すべて</SelectItem>
+              <SelectItem value="none">未分類</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterItem>
+      </FilterPanel>
 
       <div className="border rounded-md">
         <Table>

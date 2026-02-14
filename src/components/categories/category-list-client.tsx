@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -10,25 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowUp, ArrowDown, Trash2, Settings2, Save, X, GripVertical } from 'lucide-react';
+import { Trash2, Settings2, Save, X, GripVertical } from 'lucide-react';
 import { updateCategoriesOrder, deleteCategory } from '@/app/categories/actions';
 import {
   DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useSortableList } from '@/hooks/use-sortable-list';
+import { FilterPanel } from '@/components/ui/filter-panel';
 
 function SortableCategoryRow({ 
   cat, 
@@ -67,7 +61,7 @@ function SortableCategoryRow({
           <div 
             {...attributes} 
             {...listeners} 
-            className="flex justify-center p-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex justify-center p-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors touch-none"
           >
             <GripVertical size={20} />
           </div>
@@ -93,71 +87,35 @@ function SortableCategoryRow({
 }
 
 export function CategoryListClient({ categories }: { categories: any[] }) {
-  const [isSorting, setIsSorting] = useState(false);
-  const [localCategories, setLocalCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+  const sortedInitialCategories = useMemo(() => 
+    [...categories].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+    [categories]
   );
 
-  const sortedInitialCategories = [...categories].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const {
+    isSorting,
+    items,
+    loading,
+    sensors,
+    startSorting,
+    cancelSorting,
+    saveSorting,
+    handleDragEnd,
+    collisionDetection,
+  } = useSortableList(sortedInitialCategories, async (newItems) => {
+    const updates = newItems.map((cat, index) => ({
+      id: cat.id,
+      name: cat.name,
+      sort_order: index + 1
+    }));
+    await updateCategoriesOrder(updates);
+  });
 
-  useEffect(() => {
-    setLocalCategories(sortedInitialCategories);
-  }, [categories]);
-
-  const handleStartSorting = () => {
-    setIsSorting(true);
-    setLocalCategories(sortedInitialCategories);
-  };
-
-  const handleCancelSorting = () => {
-    setIsSorting(false);
-    setLocalCategories(sortedInitialCategories);
-  };
-
-  const handleSaveSorting = async () => {
-    setLoading(true);
-    try {
-      const updates = localCategories.map((cat, index) => ({
-        id: cat.id,
-        name: cat.name,
-        sort_order: index + 1
-      }));
-      await updateCategoriesOrder(updates);
-      setIsSorting(false);
-    } catch (e) {
-      alert('並び替えの保存に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setLocalCategories((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  const displayCategories = isSorting ? localCategories : sortedInitialCategories;
+  const displayCategories = isSorting ? items : sortedInitialCategories;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 bg-slate-100 p-3 rounded-lg border border-slate-300 shadow-sm">
+      <FilterPanel className="justify-between">
         <div className="text-sm text-slate-600">
           {isSorting 
             ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。" 
@@ -166,25 +124,25 @@ export function CategoryListClient({ categories }: { categories: any[] }) {
         <div className="flex gap-2">
           {isSorting ? (
             <>
-              <Button size="sm" variant="outline" onClick={handleCancelSorting} disabled={loading}>
+              <Button size="sm" variant="outline" onClick={cancelSorting} disabled={loading}>
                 <X size={16} className="mr-1" /> キャンセル
               </Button>
-              <Button size="sm" onClick={handleSaveSorting} disabled={loading}>
+              <Button size="sm" onClick={saveSorting} disabled={loading}>
                 <Save size={16} className="mr-1" /> 保存
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" onClick={handleStartSorting}>
+            <Button size="sm" variant="outline" onClick={startSorting}>
               <Settings2 size={16} className="mr-1" /> 並び替え
             </Button>
           )}
         </div>
-      </div>
+      </FilterPanel>
 
       <div className="border rounded-md">
         <DndContext 
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           onDragEnd={handleDragEnd}
         >
           <Table>
@@ -223,4 +181,5 @@ export function CategoryListClient({ categories }: { categories: any[] }) {
     </div>
   );
 }
+
 
