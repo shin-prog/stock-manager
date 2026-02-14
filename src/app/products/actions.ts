@@ -27,6 +27,35 @@ export async function createProduct(formData: FormData) {
   redirect('/products');
 }
 
+export async function updateProductCategory(id: string, category: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ category })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/products');
+  revalidatePath('/inventory');
+}
+
+export async function updateProductMemo(id: string, memo: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ memo })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/products/${id}`);
+}
+
 export async function deleteProduct(formData: FormData) {
   const supabase = await createClient();
   const id = formData.get('id') as string;

@@ -10,11 +10,12 @@ import {
 
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { deleteProduct } from '@/app/products/actions';
+import { DeleteProductButton } from '@/components/products/delete-product-button';
+import { CategorySelect } from '@/components/products/category-select';
 
 export default async function ProductsPage() {
   const supabase = await createClient();
-  const { data: products } = await supabase.from('products').select('*, units(name, symbol)');
+  const { data: products } = await supabase.from('products').select('*');
 
   return (
     <div className="space-y-6">
@@ -43,19 +44,18 @@ export default async function ProductsPage() {
                     {product.name}
                   </Link>
                 </TableCell>
-                <TableCell>{product.category}</TableCell>
+                <TableCell>
+                  <CategorySelect id={product.id} initialCategory={product.category || ''} />
+                </TableCell>
                 <TableCell>{product.min_stock_threshold}</TableCell>
                 <TableCell className="text-right">
-                  <form action={deleteProduct}>
-                    <input type="hidden" name="id" value={product.id} />
-                    <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" size="sm" type="submit">削除</Button>
-                  </form>
+                  <DeleteProductButton id={product.id} />
                 </TableCell>
               </TableRow>
             ))}
             {products?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                <TableCell colSpan={4} className="text-center py-4 text-gray-500">
                   商品がありません。右上のボタンから追加してください。
                 </TableCell>
               </TableRow>

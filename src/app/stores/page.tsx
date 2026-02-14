@@ -10,6 +10,7 @@ import {
 
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
+import { DeleteStoreButton } from '@/components/stores/delete-store-button';
 
 export default async function StoresPage() {
   const supabase = await createClient();
@@ -29,17 +30,21 @@ export default async function StoresPage() {
           <TableHeader>
             <TableRow>
               <TableHead>店名</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {stores?.map((store) => (
               <TableRow key={store.id}>
                 <TableCell className="font-medium">{store.name}</TableCell>
+                <TableCell className="text-right">
+                  <DeleteStoreButton id={store.id} />
+                </TableCell>
               </TableRow>
             ))}
             {stores?.length === 0 && (
               <TableRow>
-                <TableCell className="text-center py-4 text-gray-500">
+                <TableCell colSpan={2} className="text-center py-4 text-gray-500">
                   お店が登録されていません。右上のボタンから追加してください。
                 </TableCell>
               </TableRow>

@@ -20,3 +20,24 @@ export async function createStore(formData: FormData) {
   revalidatePath('/stores');
   redirect('/stores');
 }
+
+export async function deleteStore(formData: FormData) {
+  const supabase = await createClient();
+  const id = formData.get('id') as string;
+
+  // 1. このお店に紐付いている購入データの store_id を NULL に更新して、履歴を残しつつ削除を可能にする
+  await supabase
+    .from('purchases')
+    .update({ store_id: null })
+    .eq('store_id', id);
+
+  // 2. お店を削除
+  const { error } = await supabase.from('stores').delete().eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/stores');
+  redirect('/stores');
+}

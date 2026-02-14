@@ -3,17 +3,21 @@ import { PriceHistoryList } from '@/components/analytics/price-history';
 
 import { deleteProduct } from '@/app/products/actions';
 import { Button } from '@/components/ui/button';
+import { QuickPurchaseForm } from '@/components/forms/quick-purchase-form';
+import { ProductMemoEditor } from '@/components/products/product-memo-editor';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
   const { data: product } = await supabase
     .from('products')
-    .select('id, name, category')
+    .select('id, name, category, memo')
     .eq('id', id)
     .single();
 
   if (!product) return <div>商品が見つかりません</div>;
+
+  const { data: stores } = await supabase.from('stores').select('*').order('name');
 
   return (
     <div className="container mx-auto p-4 max-w-lg">
@@ -27,6 +31,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <Button variant="destructive" size="sm" type="submit">削除</Button>
         </form>
       </div>
+
+      <ProductMemoEditor id={id} initialMemo={product.memo || ''} />
+
+      <QuickPurchaseForm productId={id} stores={stores || []} />
       
       <PriceHistoryList productId={id} />
     </div>

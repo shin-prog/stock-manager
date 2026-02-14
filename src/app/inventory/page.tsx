@@ -12,11 +12,13 @@ export default async function InventoryPage() {
       quantity,
       products (
         name,
+        category,
         units (
           symbol
         )
       )
-    `);
+    `)
+    .order('quantity', { ascending: false });
 
   if (error) {
     console.error(error);
@@ -27,9 +29,14 @@ export default async function InventoryPage() {
   const stockItems = stockData.map((item: any) => ({
     product_id: item.product_id,
     product_name: item.products?.name || 'Unknown Product',
+    category: item.products?.category || '未分類',
     quantity: item.quantity,
     unit_symbol: item.products?.units?.symbol || '',
   }));
+
+  const standardCategories = ["キッチン", "お風呂", "掃除", "パントリー", "日用品"];
+  // 既存のデータにあるカテゴリもマージ（標準以外があれば追加）
+  const categories = Array.from(new Set([...standardCategories, ...stockItems.map(item => item.category)]));
 
   return (
     <div className="container mx-auto p-4 max-w-lg">
@@ -40,7 +47,7 @@ export default async function InventoryPage() {
           在庫がありません。「買い物」から追加してください。
         </div>
       ) : (
-        <StockList stockItems={stockItems} />
+        <StockList stockItems={stockItems} categories={categories} />
       )}
     </div>
   );

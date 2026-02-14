@@ -56,6 +56,39 @@ export async function submitPurchase(formData: any) {
   revalidatePath('/purchases');
 }
 
+export async function deletePurchaseLine(id: string, productId: string) {
+  const supabase = await createClient();
+
+  // 1. Get quantity to adjust stock back
+  const { data: line } = await supabase
+    .from('purchase_lines')
+    .select('quantity')
+    .eq('id', id)
+    .single();
+
+  if (line) {
+    // 2. Subtract from stock
+    const { data: stock } = await supabase
+      .from('stock')
+      .select('id, quantity')
+      .eq('product_id', productId)
+      .single();
+
+    if (stock) {
+      await supabase
+        .from('stock')
+        .update({ quantity: Number(stock.quantity) - Number(line.quantity) })
+        .eq('id', stock.id);
+    }
+
+    // 3. Delete the line
+    await supabase.from('purchase_lines').delete().eq('id', id);
+  }
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath('/inventory');
+}
+
 export async function adjustStock(productId: string, amount: number, reason: string = 'consumed') {
   const supabase = await createClient();
 
