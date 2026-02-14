@@ -26,10 +26,10 @@ export function ProductForm({ units, categories }: { units: any[], categories: a
         <Label htmlFor="categoryId">カテゴリ</Label>
         <input type="hidden" name="categoryId" value={categoryId} />
         <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-white border-slate-400 shadow-sm">
             <SelectValue placeholder="カテゴリを選択" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border-slate-300 shadow-lg">
             <SelectItem value="none">未分類</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>

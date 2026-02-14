@@ -157,8 +157,8 @@ export function CategoryListClient({ categories }: { categories: any[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 bg-slate-50 p-3 rounded-lg border">
-        <div className="text-sm text-gray-500">
+      <div className="flex items-center justify-between gap-2 bg-slate-100 p-3 rounded-lg border border-slate-300 shadow-sm">
+        <div className="text-sm text-slate-600">
           {isSorting 
             ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。" 
             : "カテゴリの表示順序を変更できます。"}

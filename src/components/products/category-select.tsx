@@ -20,10 +20,10 @@ export function CategorySelect({ id, initialCategoryId, categories }: { id: stri
 
   return (
     <Select value={initialCategoryId || 'none'} onValueChange={handleChange} disabled={loading}>
-      <SelectTrigger className="w-[140px] h-8 text-xs">
+      <SelectTrigger className="w-[140px] h-8 text-xs bg-white border-slate-400 shadow-sm">
         <SelectValue placeholder="カテゴリ" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white border-slate-300 shadow-lg">
         <SelectItem value="none" className="text-xs">未分類</SelectItem>
         {categories.map(cat => (
           <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>

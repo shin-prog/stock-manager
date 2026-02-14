@@ -70,10 +70,10 @@ export function QuickPurchaseForm({
         <div className="space-y-1">
           <Label className="text-xs">お店</Label>
           <Select value={storeId} onValueChange={setStoreId}>
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 bg-white border-slate-400 shadow-sm">
               <SelectValue placeholder="選択" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white border-slate-300 shadow-lg">
               {stores.map(s => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
