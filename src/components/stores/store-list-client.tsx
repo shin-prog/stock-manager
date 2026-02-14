@@ -17,6 +17,10 @@ import {
   DndContext,
 } from '@dnd-kit/core';
 import {
+  restrictToVerticalAxis,
+  restrictToFirstScrollableAncestor,
+} from '@dnd-kit/modifiers';
+import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
@@ -137,6 +141,7 @@ export function StoreListClient({ stores }: { stores: any[] }) {
           sensors={sensors}
           collisionDetection={collisionDetection}
           onDragEnd={handleDragEnd}
+          modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
         >
           <Table>
             <TableHeader>
