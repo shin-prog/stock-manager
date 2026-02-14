@@ -10,7 +10,7 @@ export function MobileNav() {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-2 flex justify-around items-center z-50">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-2 flex justify-around items-center z-[999] safe-area-pb">
       <Link href="/inventory" className={`flex flex-col items-center p-2 ${isActive('/inventory') ? 'text-blue-600' : 'text-gray-500'}`}>
         <Package size={24} />
         <span className="text-xs">在庫</span>

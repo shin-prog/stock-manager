@@ -27,14 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex h-screen overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col md:flex-row h-screen overflow-hidden`}
       >
-        <aside className="hidden md:block w-64 border-r">
+        <aside className="hidden md:block w-64 border-r overflow-y-auto">
            <div className="h-full py-4 px-2">
              <Sidebar />
            </div>
         </aside>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
           {children}
         </main>
         <MobileNav />

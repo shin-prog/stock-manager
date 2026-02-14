@@ -29,12 +29,12 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
     });
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4 mb-6 bg-slate-50 p-3 rounded-lg border">
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">カテゴリ:</div>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3 mb-4 bg-slate-50 p-2 rounded-lg border text-sm">
+        <div className="flex items-center gap-1">
+          <div className="font-bold text-gray-500">カテゴリ:</div>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[130px] h-9 bg-white">
+            <SelectTrigger className="w-[110px] h-8 bg-white text-xs">
               <SelectValue placeholder="選択" />
             </SelectTrigger>
             <SelectContent>
@@ -46,35 +46,38 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">並び替え:</div>
+        <div className="flex items-center gap-1">
+          <div className="font-bold text-gray-500">順序:</div>
           <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-            <SelectTrigger className="w-[130px] h-9 bg-white">
+            <SelectTrigger className="w-[110px] h-8 bg-white text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="desc">在庫数降順</SelectItem>
-              <SelectItem value="asc">在庫数昇順</SelectItem>
+              <SelectItem value="desc">多い順</SelectItem>
+              <SelectItem value="asc">少ない順</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {filteredItems.map((item) => (
-        <div key={item.product_id} className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm">
-          <div>
-            <Link href={`/products/${item.product_id}`} className="hover:underline">
-              <div className="font-bold text-lg">{item.product_name}</div>
+        <div key={item.product_id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+          <div className="flex-1 min-w-0 pr-2">
+            <Link href={`/products/${item.product_id}`} className="hover:underline block truncate">
+              <div className="font-bold text-base truncate">{item.product_name}</div>
             </Link>
-            <div className="text-xs text-gray-400 mb-1">{item.category}</div>
-            <div className="text-sm text-gray-500">
-              現在: <span className="text-xl font-bold text-black mx-1">{item.quantity}</span> 個
+            <div className="flex items-center gap-2 mt-1">
+              <div className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
+              <div className="text-sm text-gray-700">
+                在庫: <span className="text-lg font-bold text-black mx-0.5">{item.quantity}</span>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 shrink-0">
             <Button 
               variant="outline" 
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => handleAdjust(item.product_id, -1)}
             >
               -1
@@ -82,6 +85,7 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
             <Button 
               variant="outline" 
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => handleAdjust(item.product_id, 1)}
             >
               +1

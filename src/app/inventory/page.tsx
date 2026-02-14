@@ -40,8 +40,8 @@ export default async function InventoryPage() {
   const categories = (categoriesData || []).map(c => c.name);
 
   return (
-    <div className="container mx-auto p-4 max-w-lg">
-      <h1 className="text-2xl font-bold mb-4">在庫一覧</h1>
+    <div className="container mx-auto p-4 max-w-lg pb-24">
+      <h1 className="text-xl font-bold mb-3">在庫一覧</h1>
       
       {stockItems.length === 0 ? (
         <div className="text-center text-gray-500 py-8">
