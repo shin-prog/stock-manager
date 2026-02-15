@@ -8,61 +8,61 @@ import { ProductTagsEditor } from '@/components/tags/product-tags-editor';
 import { ProductArchiveToggle } from '@/components/products/product-archive-toggle';
 import { CategorySelect } from '@/components/products/category-select';
 import { DeleteProductDialog } from '@/components/products/delete-product-dialog';
+import { ProductStockEditor } from '@/components/products/product-stock-editor';
 import { EditLockProvider } from '@/hooks/use-edit-lock';
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [productRes, storesRes, allTagsRes, productTagsRes, categoriesRes] = await Promise.all([
+
+  const [productRes, storesRes, allTagsRes, categoriesRes, stockRes, lastStoreRes] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, category_id, memo, is_archived, product_url')
+      .select('id, name, category_id, memo, is_archived, product_url, product_tags(tags(*))')
       .eq('id', id)
       .single(),
     supabase.from('stores').select('*').order('sort_order'),
     supabase.from('tags').select('*').order('name'),
+    supabase.from('categories').select('*').order('sort_order'),
+    supabase.from('stock').select('quantity').eq('product_id', id).maybeSingle(),
     supabase
-      .from('product_tags')
-      .select('tags(*)')
-      .eq('product_id', id),
-    supabase.from('categories').select('*').order('sort_order')
+      .from('purchase_lines')
+      .select('purchases(store_id)')
+      .eq('product_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
   ]);
 
   const { data: product } = productRes;
   const { data: stores } = storesRes;
   const { data: allTags } = allTagsRes;
-  const { data: productTagsData } = productTagsRes;
   const { data: categories } = categoriesRes;
+  const { data: stock } = stockRes;
+  const { data: lastStoreData } = lastStoreRes;
 
   if (!product) return <div>商品が見つかりません</div>;
 
-  const productTags = productTagsData?.map(item => item.tags) || [];
-
-  // この商品の直近の購入店を取得
-  const lastPurchaseRes = await supabase
-    .from('purchase_lines')
-    .select('purchases(store_id)')
-    .eq('product_id', id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const lastPurchaseForProduct = lastPurchaseRes.data;
-
-  const lastStoreId = (lastPurchaseForProduct?.purchases as any)?.store_id;
+  const currentQuantity = stock?.quantity || 0;
+  const productTags = (product as any).product_tags?.map((item: any) => item.tags) || [];
+  const lastStoreId = (lastStoreData?.purchases as any)?.store_id;
 
   return (
     <EditLockProvider>
       <div className="container mx-auto p-4 max-w-lg pb-24">
         <div className="flex justify-between items-start mb-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <ProductNameEditor id={id} initialName={product.name} />
-            <div className="mt-1">
+            <div className="mt-2 flex items-center flex-wrap gap-2">
               <CategorySelect
                 id={id}
                 initialCategoryId={product.category_id}
                 categories={categories || []}
               />
+              <ProductStockEditor productId={id} initialQuantity={currentQuantity} />
+              <ProductArchiveToggle productId={id} initialIsArchived={!!product.is_archived} />
             </div>
           </div>
           <DeleteProductDialog id={product.id} productName={product.name} />
@@ -76,15 +76,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           />
         </div>
 
-        <ProductUrlEditor id={id} initialUrl={product.product_url} />
+        <div className="space-y-4">
+          <ProductUrlEditor id={id} initialUrl={product.product_url} />
+          <ProductMemoEditor id={id} initialMemo={product.memo || ''} />
+        </div>
 
-        <ProductMemoEditor id={id} initialMemo={product.memo || ''} />
+        <div className="mt-8">
+          <QuickPurchaseForm productId={id} stores={stores || []} lastStoreId={lastStoreId} />
+        </div>
 
-        <ProductArchiveToggle productId={id} initialIsArchived={!!product.is_archived} />
-
-        <QuickPurchaseForm productId={id} stores={stores || []} lastStoreId={lastStoreId} />
-
-        <PriceHistoryList productId={id} />
+        <Suspense fallback={
+          <div className="mt-8 flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
+          </div>
+        }>
+          <PriceHistoryList productId={id} />
+        </Suspense>
       </div>
     </EditLockProvider>
   );

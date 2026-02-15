@@ -21,16 +21,19 @@ export function CategorySelect({ id, initialCategoryId, categories }: { id: stri
   };
 
   return (
-    <Select value={initialCategoryId || 'none'} onValueChange={handleChange} disabled={loading}>
-      <SelectTrigger className="w-[140px] h-8 text-xs bg-white border-slate-400 shadow-sm">
-        <SelectValue placeholder="カテゴリ" />
-      </SelectTrigger>
-      <SelectContent className="bg-white border-slate-300 shadow-lg">
-        <SelectItem value="none" className="text-xs">未分類</SelectItem>
-        {categories.map(cat => (
-          <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="inline-flex items-center gap-2 h-8 px-2 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">カテゴリ</span>
+      <Select value={initialCategoryId || 'none'} onValueChange={handleChange} disabled={loading}>
+        <SelectTrigger className="h-6 w-auto min-w-[70px] border-none bg-transparent p-0 text-xs font-bold text-slate-700 shadow-none focus:ring-0">
+          <SelectValue placeholder="未分類" />
+        </SelectTrigger>
+        <SelectContent className="bg-white border-slate-300 shadow-lg">
+          <SelectItem value="none" className="text-xs">未分類</SelectItem>
+          {categories.map(cat => (
+            <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

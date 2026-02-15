@@ -6,6 +6,8 @@ export interface StockItem {
   product_id: string;
   product_name: string;
   category: string;
+  category_id: string | null;
+  tags: { id: string, name: string, color_key: string }[];
   quantity: number;
   is_archived: boolean;
 }
@@ -24,7 +26,14 @@ export async function InventoryList() {
         products (
           name,
           category_id,
-          is_archived
+          is_archived,
+          product_tags (
+            tags (
+              id,
+              name,
+              color_key
+            )
+          )
         )
       `,
       )
@@ -40,20 +49,26 @@ export async function InventoryList() {
     return <div>Error loading inventory</div>;
   }
 
+  const allCategories = categoriesData as Category[] || [];
   const categoriesMap = new Map<string, string>(
-    (categoriesData as Category[] || []).map((c) => [c.id, c.name]),
+    allCategories.map((c) => [c.id, c.name]),
   );
 
   // Transform data for the component
-  const stockItems: StockItem[] = (stockData as any[]).map((item) => ({
-    product_id: item.product_id,
-    product_name: item.products?.name || "Unknown Product",
-    category: categoriesMap.get(item.products?.category_id) || "未分類",
-    quantity: item.quantity,
-    is_archived: !!item.products?.is_archived,
-  }));
+  const stockItems: StockItem[] = (stockData as any[]).map((item) => {
+    const productTags = item.products?.product_tags || [];
+    const tags = productTags.map((pt: any) => pt.tags).filter(Boolean);
 
-  const categories = (categoriesData || []).map((c) => c.name);
+    return {
+      product_id: item.product_id,
+      product_name: item.products?.name || "Unknown Product",
+      category: categoriesMap.get(item.products?.category_id) || "未分類",
+      category_id: item.products?.category_id || null,
+      tags: tags,
+      quantity: item.quantity,
+      is_archived: !!item.products?.is_archived,
+    };
+  });
 
   if (stockItems.length === 0) {
     return (
@@ -63,7 +78,7 @@ export async function InventoryList() {
     );
   }
 
-  return <StockList stockItems={stockItems} categories={categories} />;
+  return <StockList stockItems={stockItems} categories={allCategories} />;
 }
 
 export function InventorySkeleton() {

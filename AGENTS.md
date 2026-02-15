@@ -4,9 +4,12 @@
 ブランチはmainとdevelopの2つを使用すること
 
 - main: 本番環境にデプロイされるブランチ
-- develop: 開発用ブランチ。機能追加や修正はすべてこのブランチで行い、完了後にmainへマージするフローとする
+- develop: 開発用ブランチ。機能追加や修正はすべてこのブランチで行い、完了後にmainへマージするフローとする。
+- **マージルール**: ブランチ間のマージ（特に `develop` から `main` へのリリース）は、直接コマンドで行わず、必ず GitHub 上で **Pull Request
+st (PR)** を作成して行うこと。
+- **環境分離**: ローカル開発時は `.env.local` の設定が開発環境（DEVプロジェクト）に向いていることを常に確認すること。
 
-  GitHubリポジトリはhttps://github.com/shin-prog/
+  GitHubリポジトリ: https://github.com/shin-prog/stock-manager
 
 ### 技術スタック
 
