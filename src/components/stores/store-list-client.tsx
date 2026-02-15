@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DeleteStoreButton } from '@/components/stores/delete-store-button';
+import { StoreNameEditor } from '@/components/stores/store-name-editor';
 import { Settings2, Save, X, GripVertical } from 'lucide-react';
 import { updateStoresOrder } from '@/app/stores/actions';
 import {
@@ -76,7 +77,9 @@ function SortableStoreRow({
           <span className="text-gray-400 text-xs">{index + 1}</span>
         )}
       </TableCell>
-      <TableCell className="font-medium">{store.name}</TableCell>
+      <TableCell>
+        <StoreNameEditor id={store.id} initialName={store.name} />
+      </TableCell>
       <TableCell className="text-right">
         {!isSorting && <DeleteStoreButton id={store.id} />}
       </TableCell>

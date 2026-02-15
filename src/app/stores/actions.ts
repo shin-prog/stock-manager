@@ -59,7 +59,23 @@ export async function updateStoreOrder(id: string, newOrder: number) {
   revalidatePath('/stores');
 }
 
+export async function updateStoreName(id: string, name: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('stores')
+    .update({ name })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath('/stores');
+  revalidatePath('/inventory');
+}
+
 export async function deleteStore(formData: FormData) {
+
   const supabase = await createClient();
   const id = formData.get('id') as string;
 
