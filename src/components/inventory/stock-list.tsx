@@ -9,23 +9,9 @@ import { cn } from '@/lib/utils';
 import { StockItem } from './inventory-container';
 import { Category, Tag } from '@/types';
 import { Loader2, X as CloseIcon } from "lucide-react";
+import { getQuietColorClasses } from '@/lib/colors';
 
 import Link from 'next/link';
-
-const getTagColorClass = (colorKey: string) => {
-  const colors: Record<string, string> = {
-    red: "bg-red-50 text-red-600 border-red-200",
-    blue: "bg-blue-50 text-blue-600 border-blue-200",
-    green: "bg-green-50 text-green-600 border-green-200",
-    yellow: "bg-yellow-50 text-yellow-600 border-yellow-200",
-    purple: "bg-purple-50 text-purple-600 border-purple-200",
-    pink: "bg-pink-50 text-pink-600 border-pink-200",
-    indigo: "bg-indigo-50 text-indigo-600 border-indigo-200",
-    slate: "bg-slate-50 text-slate-600 border-slate-200",
-    orange: "bg-orange-50 text-orange-600 border-orange-200",
-  };
-  return colors[colorKey] || colors.slate;
-};
 
 export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -204,7 +190,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                       href={`/tags/${tag.id}`}
                       className={cn(
                         "text-[9px] px-1.5 py-0.5 rounded-full border transition-colors hover:opacity-80",
-                        getTagColorClass(tag.color_key)
+                        getQuietColorClasses(tag.color_key)
                       )}
                     >
                       {tag.name}
