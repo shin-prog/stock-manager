@@ -47,14 +47,14 @@ export async function assignTagsToProduct(productId: string, tagIds: string[]) {
     .delete()
     .eq('product_id', productId);
 
-  if (tagIds.length === 0) return;
+  if (tagIds.length > 0) {
+    // Insert new associations
+    const { error } = await supabase
+      .from('product_tags')
+      .insert(tagIds.map(tagId => ({ product_id: productId, tag_id: tagId })));
 
-  // Insert new associations
-  const { error } = await supabase
-    .from('product_tags')
-    .insert(tagIds.map(tagId => ({ product_id: productId, tag_id: tagId })));
-
-  if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
+  }
   
   revalidatePath(`/products/${productId}`);
   revalidatePath('/products');

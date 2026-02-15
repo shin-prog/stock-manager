@@ -74,7 +74,7 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
         // Forcefully disable focus on mount by setting it to false when inline
         autoFocus={false}
       />
-      <CommandList className="bg-white max-h-[200px]">
+      <CommandList className={cn("bg-white", inline ? "max-h-[150px]" : "max-h-[200px]")}>
         <CommandEmpty>
           {inputValue ? (
             <div className="p-2 text-center">

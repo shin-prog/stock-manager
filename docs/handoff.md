@@ -34,7 +34,8 @@
 ### データの整合性
 
 - **削除時の制約**:
-  - `products` 削除時: 関連する `purchase_lines`, `stock` 等は **CASCADE削除** されます。
+  - `products` 削除時: 関連する `purchase_lines`, `stock`, `product_tags` 等は **CASCADE削除** されます。
+  - `tags` 削除時: 関連する `product_tags` の紐付けは **CASCADE削除** されます（タグ自体が消えても商品は残る）。
   - `stores` 削除時: 関連する `purchases.store_id` は **Set NULL** されます（履歴は残る）。
   - `categories` 削除時: 関連する `products.category_id` は **Set NULL** されます（商品は残る）。
 
