@@ -61,6 +61,36 @@ export async function updateProductMemo(id: string, memo: string) {
   revalidatePath(`/products/${id}`);
 }
 
+export async function updateProductName(id: string, name: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ name })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/products/${id}`);
+  revalidatePath('/products');
+  revalidatePath('/inventory');
+}
+
+export async function updateProductUrl(id: string, url: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ product_url: url })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/products/${id}`);
+}
+
 export async function toggleProductArchive(id: string, isArchived: boolean) {
   const supabase = await createClient();
   const { error } = await supabase

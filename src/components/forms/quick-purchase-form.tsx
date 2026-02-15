@@ -9,6 +9,8 @@ import { submitPurchase } from '@/app/actions';
 
 import { useTransition } from 'react';
 
+import { ShoppingCart } from 'lucide-react';
+
 export function QuickPurchaseForm({ 
   productId, 
   stores,
@@ -60,15 +62,18 @@ export function QuickPurchaseForm({
 
   return (
     <div className="bg-slate-50 border rounded-lg p-4 mb-8 space-y-4 text-sm">
-      <h3 className="font-bold text-base border-b pb-2">この商品をすぐに購入登録</h3>
+      <div className="flex items-center gap-2 font-bold text-slate-700 border-b pb-2">
+        <ShoppingCart size={18} />
+        <span>購入を記録</span>
+      </div>
       
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label className="text-xs">購入日</Label>
-          <Input type="date" value={date} onChange={e => setDate(e.target.value)} bs-size="sm" />
+          <Label className="text-xs font-bold text-slate-500">購入日</Label>
+          <Input type="date" value={date} onChange={e => setDate(e.target.value)} bs-size="sm" className="bg-white" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">お店</Label>
+          <Label className="text-xs font-bold text-slate-500">お店</Label>
           <Select value={storeId} onValueChange={setStoreId}>
             <SelectTrigger className="h-9 bg-white border-slate-400 shadow-sm">
               <SelectValue placeholder="選択" />
@@ -84,31 +89,33 @@ export function QuickPurchaseForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label className="text-xs">個数</Label>
-          <Input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} />
+          <Label className="text-xs font-bold text-slate-500">個数</Label>
+          <Input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} className="bg-white" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">容量・メモ</Label>
+          <Label className="text-xs font-bold text-slate-500">容量・メモ</Label>
           <Input 
             placeholder="100ml等" 
             value={sizeInfo} 
             onChange={e => setSizeInfo(e.target.value)} 
+            className="bg-white"
           />
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs">単価 (1つあたり)</Label>
+        <Label className="text-xs font-bold text-slate-500">単価</Label>
         <Input 
           type="number" 
           placeholder="金額を入力"
           value={price} 
           onChange={e => setPrice(e.target.value)} 
+          className="bg-white h-10"
         />
       </div>
 
-      <Button onClick={handleSubmit} className="w-full" disabled={isPending}>
-        {isPending ? '登録中...' : 'この内容で購入登録する'}
+      <Button onClick={handleSubmit} className="w-full font-bold h-11" disabled={isPending}>
+        {isPending ? '登録中...' : '購入を登録する'}
       </Button>
     </div>
   );

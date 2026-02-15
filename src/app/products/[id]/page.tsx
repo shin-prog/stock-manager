@@ -4,6 +4,8 @@ import { deleteProduct } from '@/app/products/actions';
 import { Button } from '@/components/ui/button';
 import { QuickPurchaseForm } from '@/components/forms/quick-purchase-form';
 import { ProductMemoEditor } from '@/components/products/product-memo-editor';
+import { ProductNameEditor } from '@/components/products/product-name-editor';
+import { ProductUrlEditor } from '@/components/products/product-url-editor';
 import { ProductTagsEditor } from '@/components/tags/product-tags-editor';
 import { ProductArchiveToggle } from '@/components/products/product-archive-toggle';
 import { Trash2 } from 'lucide-react';
@@ -14,7 +16,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const [productRes, storesRes, allTagsRes, productTagsRes] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, category_id, memo, is_archived')
+      .select('id, name, category_id, memo, is_archived, product_url')
       .eq('id', id)
       .single(),
     supabase.from('stores').select('*').order('sort_order'),
@@ -59,7 +61,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     <div className="container mx-auto p-4 max-w-lg pb-24">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">{product.name}</h1>
+          <ProductNameEditor id={id} initialName={product.name} />
           <div className="text-sm text-gray-500">{category?.name || '未分類'}</div>
         </div>
         <form action={deleteProduct}>
@@ -77,6 +79,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           allTags={allTags || []} 
         />
       </div>
+
+      <ProductUrlEditor id={id} initialUrl={product.product_url} />
 
       <ProductMemoEditor id={id} initialMemo={product.memo || ''} />
 
