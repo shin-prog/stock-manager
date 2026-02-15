@@ -4,17 +4,32 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { updateProductMemo } from '@/app/products/actions';
 import { Pencil, Save, X } from 'lucide-react';
+import { useEditLock } from '@/hooks/use-edit-lock';
 
 export function ProductMemoEditor({ id, initialMemo }: { id: string, initialMemo: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [memo, setMemo] = useState(initialMemo || '');
   const [loading, setLoading] = useState(false);
+  const { isEditable, startEdit, stopEdit } = useEditLock('product-memo');
+
+  const handleStartEdit = () => {
+    if (startEdit()) {
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setMemo(initialMemo || '');
+    stopEdit();
+  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
       await updateProductMemo(id, memo);
       setIsEditing(false);
+      stopEdit();
     } catch (e) {
       alert('メモの保存に失敗しました');
     } finally {
@@ -27,10 +42,11 @@ export function ProductMemoEditor({ id, initialMemo }: { id: string, initialMemo
       <div className="bg-amber-50 border border-amber-100 rounded-md p-3 text-sm text-amber-900 mb-6">
         <div className="flex justify-between items-start">
           <div className="whitespace-pre-wrap">{memo || 'メモを入力してください...'}</div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setIsEditing(true)}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleStartEdit}
+            disabled={!isEditable}
             className="h-8 w-8 p-0 text-amber-700 hover:bg-amber-100 shrink-0"
           >
             <Pencil size={16} />
@@ -49,7 +65,7 @@ export function ProductMemoEditor({ id, initialMemo }: { id: string, initialMemo
         placeholder="商品の特徴、使い方、特記事項など..."
       />
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={loading}>
+        <Button variant="ghost" size="sm" onClick={handleCancel} disabled={loading}>
           <X size={14} className="mr-1" /> キャンセル
         </Button>
         <Button variant="default" size="sm" onClick={handleSave} disabled={loading} className="bg-amber-600 hover:bg-amber-700">

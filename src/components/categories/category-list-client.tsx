@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Trash2, Settings2, Save, X, GripVertical } from 'lucide-react';
-import { updateCategoriesOrder, deleteCategory } from '@/app/categories/actions';
+import { Trash2, Settings2, Save, X, GripVertical, Pencil, Check } from 'lucide-react';
+import { updateCategoriesOrder, updateCategoryName, deleteCategory } from '@/app/categories/actions';
 import {
   DndContext,
 } from '@dnd-kit/core';
@@ -30,17 +31,28 @@ import { FilterPanel } from '@/components/ui/filter-panel';
 
 import { Category } from '@/types';
 
-function SortableCategoryRow({ 
-  cat, 
-  index, 
-  isSorting, 
-  isDragging 
-}: { 
-  cat: Category, 
-  index: number, 
-  isSorting: boolean, 
-  isDragging?: boolean
+function SortableCategoryRow({
+  cat,
+  index,
+  isSorting,
+  isDragging,
+  isEditing,
+  isOtherEditing,
+  onStartEdit,
+  onStopEdit,
+}: {
+  cat: Category,
+  index: number,
+  isSorting: boolean,
+  isDragging?: boolean,
+  isEditing: boolean,
+  isOtherEditing: boolean,
+  onStartEdit: () => void,
+  onStopEdit: () => void,
 }) {
+  const [editName, setEditName] = useState(cat.name);
+  const [saving, setSaving] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -56,17 +68,45 @@ function SortableCategoryRow({
     position: 'relative' as const,
   };
 
+  const handleSaveName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === cat.name) {
+      onStopEdit();
+      setEditName(cat.name);
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateCategoryName(cat.id, trimmed);
+      onStopEdit();
+    } catch (e) {
+      alert('カテゴリ名の更新に失敗しました');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      onStopEdit();
+      setEditName(cat.name);
+    }
+  };
+
   return (
-    <TableRow 
-      ref={setNodeRef} 
+    <TableRow
+      ref={setNodeRef}
       style={style}
       className={`${isSorting ? "bg-blue-50/30" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
       <TableCell className="text-center">
         {isSorting ? (
-          <div 
-            {...attributes} 
-            {...listeners} 
+          <div
+            {...attributes}
+            {...listeners}
             className="flex justify-center p-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors touch-none"
           >
             <GripVertical size={20} />
@@ -75,14 +115,60 @@ function SortableCategoryRow({
           <span className="text-gray-400 text-xs">{index + 1}</span>
         )}
       </TableCell>
-      <TableCell className="font-medium">{cat.name}</TableCell>
+      <TableCell className="font-medium">
+        {isEditing ? (
+          <div className="flex items-center gap-1">
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="h-8 text-sm border-slate-300"
+              disabled={saving}
+              autoFocus
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+              onClick={handleSaveName}
+              disabled={saving}
+            >
+              <Check size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"
+              onClick={() => { onStopEdit(); setEditName(cat.name); }}
+              disabled={saving}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>{cat.name}</span>
+            {!isSorting && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                onClick={() => { onStartEdit(); setEditName(cat.name); }}
+                disabled={isOtherEditing}
+              >
+                <Pencil size={14} />
+              </Button>
+            )}
+          </div>
+        )}
+      </TableCell>
       <TableCell className="text-right">
-        {!isSorting && (
+        {!isSorting && !isEditing && (
           <form action={deleteCategory} onSubmit={(e) => {
-            if (!confirm('このカテゴリを削除しますか？紐付いている商品は「未分類」になります。')) e.preventDefault();
+            if (isOtherEditing || !confirm('このカテゴリを削除しますか？紐付いている商品は「未分類」になります。')) e.preventDefault();
           }}>
             <input type="hidden" name="id" value={cat.id} />
-            <Button variant="ghost" className="text-red-600 h-8 w-8 p-0" type="submit">
+            <Button variant="ghost" className="text-red-600 h-8 w-8 p-0" type="submit" disabled={isOtherEditing}>
               <Trash2 size={16} />
             </Button>
           </form>
@@ -93,7 +179,9 @@ function SortableCategoryRow({
 }
 
 export function CategoryListClient({ categories }: { categories: Category[] }) {
-  const sortedInitialCategories = useMemo(() => 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const sortedInitialCategories = useMemo(() =>
     [...categories].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
     [categories]
   );
@@ -123,8 +211,8 @@ export function CategoryListClient({ categories }: { categories: Category[] }) {
     <div className="space-y-4">
       <FilterPanel className="justify-between">
         <div className="text-sm text-slate-600">
-          {isSorting 
-            ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。" 
+          {isSorting
+            ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。"
             : "カテゴリの表示順序を変更できます。"}
         </div>
         <div className="flex gap-2">
@@ -146,7 +234,7 @@ export function CategoryListClient({ categories }: { categories: Category[] }) {
       </FilterPanel>
 
       <div className="border rounded-md">
-        <DndContext 
+        <DndContext
           sensors={sensors}
           collisionDetection={collisionDetection}
           onDragEnd={handleDragEnd}
@@ -161,16 +249,20 @@ export function CategoryListClient({ categories }: { categories: Category[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <SortableContext 
+              <SortableContext
                 items={displayCategories.map(c => c.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {displayCategories.map((cat, index) => (
-                  <SortableCategoryRow 
-                    key={cat.id} 
-                    cat={cat} 
-                    index={index} 
-                    isSorting={isSorting} 
+                  <SortableCategoryRow
+                    key={cat.id}
+                    cat={cat}
+                    index={index}
+                    isSorting={isSorting}
+                    isEditing={editingId === cat.id}
+                    isOtherEditing={editingId !== null && editingId !== cat.id}
+                    onStartEdit={() => setEditingId(cat.id)}
+                    onStopEdit={() => setEditingId(null)}
                   />
                 ))}
               </SortableContext>

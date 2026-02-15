@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
-  
+
   const name = formData.get('name') as string;
   const categoryId = formData.get('categoryId') as string;
   const tagIds = formData.getAll('tagIds') as string[];
@@ -20,14 +20,22 @@ export async function createProduct(formData: FormData) {
     throw new Error(error.message);
   }
 
+  // デフォルトで在庫0のレコードを作成
+  await supabase.from('stock').insert({
+    product_id: product.id,
+    quantity: 0,
+    last_updated: new Date().toISOString(),
+  });
+
   if (tagIds.length > 0) {
     await supabase.from('product_tags').insert(
       tagIds.map(tagId => ({ product_id: product.id, tag_id: tagId }))
     );
   }
 
+  revalidatePath('/inventory');
   revalidatePath('/products');
-  redirect('/products');
+  redirect('/inventory');
 }
 
 export async function updateProductCategory(id: string, categoryId: string) {
@@ -119,6 +127,7 @@ export async function deleteProduct(formData: FormData) {
     throw new Error(error.message);
   }
 
+  revalidatePath('/inventory');
   revalidatePath('/products');
-  redirect('/products');
+  redirect('/inventory');
 }

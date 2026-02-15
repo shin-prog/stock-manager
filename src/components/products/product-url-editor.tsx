@@ -5,18 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateProductUrl } from '@/app/products/actions';
 import { ExternalLink, Link as LinkIcon, Pencil, Save, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEditLock } from '@/hooks/use-edit-lock';
 
 export function ProductUrlEditor({ id, initialUrl }: { id: string, initialUrl: string | null }) {
   const [isEditing, setIsEditing] = useState(false);
   const [url, setUrl] = useState(initialUrl || '');
   const [loading, setLoading] = useState(false);
+  const { isEditable, startEdit, stopEdit } = useEditLock('product-url');
+
+  const handleStartEdit = () => {
+    if (startEdit()) {
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setUrl(initialUrl || '');
+    stopEdit();
+  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
       await updateProductUrl(id, url);
       setIsEditing(false);
+      stopEdit();
     } catch (e) {
       alert('URLの保存に失敗しました');
     } finally {
@@ -28,9 +42,9 @@ export function ProductUrlEditor({ id, initialUrl }: { id: string, initialUrl: s
     return (
       <div className="flex items-center gap-2 mb-4">
         {initialUrl ? (
-          <a 
-            href={initialUrl} 
-            target="_blank" 
+          <a
+            href={initialUrl}
+            target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm font-bold border border-blue-100 hover:bg-blue-100 transition-colors"
           >
@@ -43,10 +57,11 @@ export function ProductUrlEditor({ id, initialUrl }: { id: string, initialUrl: s
             URL未設定
           </div>
         )}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setIsEditing(true)}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleStartEdit}
+          disabled={!isEditable}
           className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
         >
           <Pencil size={14} />
@@ -68,7 +83,7 @@ export function ProductUrlEditor({ id, initialUrl }: { id: string, initialUrl: s
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={loading} className="h-7 text-xs">
+        <Button variant="ghost" size="sm" onClick={handleCancel} disabled={loading} className="h-7 text-xs">
           キャンセル
         </Button>
         <Button variant="default" size="sm" onClick={handleSave} disabled={loading} className="h-7 text-xs font-bold">

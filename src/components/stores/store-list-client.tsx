@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,10 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { DeleteStoreButton } from '@/components/stores/delete-store-button';
-import { StoreNameEditor } from '@/components/stores/store-name-editor';
-import { Settings2, Save, X, GripVertical } from 'lucide-react';
-import { updateStoresOrder } from '@/app/stores/actions';
+import { Trash2, Settings2, Save, X, GripVertical, Pencil, Check } from 'lucide-react';
+import { updateStoresOrder, updateStoreName, deleteStore } from '@/app/stores/actions';
 import {
   DndContext,
 } from '@dnd-kit/core';
@@ -32,17 +31,28 @@ import { FilterPanel } from '@/components/ui/filter-panel';
 
 import { Store } from '@/types';
 
-function SortableStoreRow({ 
-  store, 
-  index, 
-  isSorting, 
-  isDragging
-}: { 
-  store: Store, 
-  index: number, 
-  isSorting: boolean, 
-  isDragging?: boolean
+function SortableStoreRow({
+  store,
+  index,
+  isSorting,
+  isDragging,
+  isEditing,
+  isOtherEditing,
+  onStartEdit,
+  onStopEdit,
+}: {
+  store: Store,
+  index: number,
+  isSorting: boolean,
+  isDragging?: boolean,
+  isEditing: boolean,
+  isOtherEditing: boolean,
+  onStartEdit: () => void,
+  onStopEdit: () => void,
 }) {
+  const [editName, setEditName] = useState(store.name);
+  const [saving, setSaving] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -58,17 +68,45 @@ function SortableStoreRow({
     position: 'relative' as const,
   };
 
+  const handleSaveName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === store.name) {
+      onStopEdit();
+      setEditName(store.name);
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateStoreName(store.id, trimmed);
+      onStopEdit();
+    } catch (e) {
+      alert('店名の更新に失敗しました');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      onStopEdit();
+      setEditName(store.name);
+    }
+  };
+
   return (
-    <TableRow 
-      ref={setNodeRef} 
+    <TableRow
+      ref={setNodeRef}
       style={style}
       className={`${isSorting ? "bg-blue-50/30" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
       <TableCell className="text-center">
         {isSorting ? (
-          <div 
-            {...attributes} 
-            {...listeners} 
+          <div
+            {...attributes}
+            {...listeners}
             className="flex justify-center p-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 transition-colors touch-none"
           >
             <GripVertical size={20} />
@@ -77,19 +115,73 @@ function SortableStoreRow({
           <span className="text-gray-400 text-xs">{index + 1}</span>
         )}
       </TableCell>
-      <TableCell>
-        <StoreNameEditor id={store.id} initialName={store.name} />
+      <TableCell className="font-medium">
+        {isEditing ? (
+          <div className="flex items-center gap-1">
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="h-8 text-sm border-slate-300"
+              disabled={saving}
+              autoFocus
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+              onClick={handleSaveName}
+              disabled={saving}
+            >
+              <Check size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"
+              onClick={() => { onStopEdit(); setEditName(store.name); }}
+              disabled={saving}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>{store.name}</span>
+            {!isSorting && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                onClick={() => { onStartEdit(); setEditName(store.name); }}
+                disabled={isOtherEditing}
+              >
+                <Pencil size={14} />
+              </Button>
+            )}
+          </div>
+        )}
       </TableCell>
       <TableCell className="text-right">
-        {!isSorting && <DeleteStoreButton id={store.id} />}
+        {!isSorting && !isEditing && (
+          <form action={deleteStore} onSubmit={(e) => {
+            if (isOtherEditing || !confirm('このお店を削除しますか？購入履歴の店名表示が消える場合があります。')) e.preventDefault();
+          }}>
+            <input type="hidden" name="id" value={store.id} />
+            <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0" type="submit" disabled={isOtherEditing}>
+              <Trash2 size={16} />
+            </Button>
+          </form>
+        )}
       </TableCell>
     </TableRow>
   );
 }
 
 export function StoreListClient({ stores }: { stores: Store[] }) {
-  // 初期表示用にソート
-  const sortedInitialStores = useMemo(() => 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const sortedInitialStores = useMemo(() =>
     [...stores].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
     [stores]
   );
@@ -107,7 +199,7 @@ export function StoreListClient({ stores }: { stores: Store[] }) {
   } = useSortableList(sortedInitialStores, async (newItems) => {
     const updates = newItems.map((store, index) => ({
       id: store.id,
-      name: store.name, 
+      name: store.name,
       sort_order: index + 1
     }));
     await updateStoresOrder(updates);
@@ -119,8 +211,8 @@ export function StoreListClient({ stores }: { stores: Store[] }) {
     <div className="space-y-4">
       <FilterPanel className="justify-between">
         <div className="text-sm text-slate-600">
-          {isSorting 
-            ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。" 
+          {isSorting
+            ? "ハンドルをドラッグして順序を入れ替え、「保存」を押してください。"
             : "お店の表示順序を変更できます。"}
         </div>
         <div className="flex gap-2">
@@ -142,7 +234,7 @@ export function StoreListClient({ stores }: { stores: Store[] }) {
       </FilterPanel>
 
       <div className="border rounded-md">
-        <DndContext 
+        <DndContext
           sensors={sensors}
           collisionDetection={collisionDetection}
           onDragEnd={handleDragEnd}
@@ -157,16 +249,20 @@ export function StoreListClient({ stores }: { stores: Store[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <SortableContext 
+              <SortableContext
                 items={displayStores.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {displayStores.map((store, index) => (
-                  <SortableStoreRow 
-                    key={store.id} 
-                    store={store} 
-                    index={index} 
-                    isSorting={isSorting} 
+                  <SortableStoreRow
+                    key={store.id}
+                    store={store}
+                    index={index}
+                    isSorting={isSorting}
+                    isEditing={editingId === store.id}
+                    isOtherEditing={editingId !== null && editingId !== store.id}
+                    onStartEdit={() => setEditingId(store.id)}
+                    onStopEdit={() => setEditingId(null)}
                   />
                 ))}
               </SortableContext>
@@ -184,5 +280,3 @@ export function StoreListClient({ stores }: { stores: Store[] }) {
     </div>
   );
 }
-
-
