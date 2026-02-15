@@ -9,7 +9,7 @@ import { SubmitButton } from './submit-button';
 
 import { TagSelector } from '@/components/tags/tag-selector';
 
-export function ProductForm({ units, categories, allTags }: { units: any[], categories: any[], allTags: any[] }) {
+export function ProductForm({ categories, allTags }: { categories: any[], allTags: any[] }) {
   const [categoryId, setCategoryId] = React.useState('');
   const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
 
@@ -52,9 +52,6 @@ export function ProductForm({ units, categories, allTags }: { units: any[], cate
           onChange={setSelectedTagIds} 
         />
       </div>
-
-      {/* Hidden Unit Selection (Default to 'Piece' / '個') */}
-      <input type="hidden" name="defaultUnitId" value={units.find(u => u.symbol === 'pc' || u.symbol === '個')?.id || units[0]?.id} />
 
       <SubmitButton className="w-full">登録する</SubmitButton>
     </form>

@@ -39,7 +39,6 @@ export async function submitPurchase(formData: any) {
     const { error: lError } = await supabase.from('purchase_lines').insert({
       purchase_id: purchase.id,
       product_id: line.productId,
-      unit_id: line.unitId || null, // Allow NULL if empty string
       quantity: line.quantity,
       unit_price: line.price,
       line_cost: line.quantity * line.price,

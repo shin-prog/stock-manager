@@ -14,7 +14,6 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
       id,
       unit_price,
       quantity,
-      unit_id,
       size_info,
       purchases (
         purchased_at,

@@ -73,7 +73,7 @@
 
 ## 5. データ構造 (Supabase)
 - `categories`: カテゴリ情報（`sort_order` を含む）
-- `products`: 商品基本情報（`memo`, `category_id` を含む）
+- `products`: 商品基本情報（`memo`, `category_id`, `is_archived`, `product_url` を含む）
 - `tags`: タグ情報（`name`, `color_key` を含む）
 - `product_tags`: 商品とタグの多対多中間テーブル
 - `stores`: 店舗情報（`sort_order` を含む）

@@ -3,14 +3,17 @@ import { ProductForm } from '@/components/forms/product-form';
 
 export default async function NewProductPage() {
   const supabase = await createClient();
-  const { data: units } = await supabase.from('units').select('*');
-  const { data: categories } = await supabase.from('categories').select('*').order('sort_order');
-  const { data: tags } = await supabase.from('tags').select('*').order('name');
+  const [categoriesRes, tagsRes] = await Promise.all([
+    supabase.from('categories').select('*').order('sort_order'),
+    supabase.from('tags').select('*').order('name')
+  ]);
+
+  const { data: categories } = categoriesRes;
+  const { data: tags } = tagsRes;
 
   return (
     <div className="container mx-auto p-4 max-w-lg">
       <ProductForm 
-        units={units || []} 
         categories={categories || []} 
         allTags={tags || []}
       />

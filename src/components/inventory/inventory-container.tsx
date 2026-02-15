@@ -15,10 +15,7 @@ export async function InventoryList() {
         products (
           name,
           category_id,
-          is_archived,
-          units (
-            symbol
-          )
+          is_archived
         )
       `,
       )
@@ -44,7 +41,6 @@ export async function InventoryList() {
     product_name: item.products?.name || "Unknown Product",
     category: categoriesMap.get(item.products?.category_id) || "未分類",
     quantity: item.quantity,
-    unit_symbol: item.products?.units?.symbol || "",
     is_archived: !!item.products?.is_archived,
   }));
 
