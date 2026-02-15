@@ -61,6 +61,22 @@ export async function updateProductMemo(id: string, memo: string) {
   revalidatePath(`/products/${id}`);
 }
 
+export async function toggleProductArchive(id: string, isArchived: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ is_archived: isArchived })
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/products/${id}`);
+  revalidatePath('/inventory');
+  revalidatePath('/products');
+}
+
 export async function deleteProduct(formData: FormData) {
   const supabase = await createClient();
   const id = formData.get('id') as string;

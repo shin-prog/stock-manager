@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { QuickPurchaseForm } from '@/components/forms/quick-purchase-form';
 import { ProductMemoEditor } from '@/components/products/product-memo-editor';
 import { ProductTagsEditor } from '@/components/tags/product-tags-editor';
+import { ProductArchiveToggle } from '@/components/products/product-archive-toggle';
 import { Trash2 } from 'lucide-react';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +14,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const [productRes, storesRes, allTagsRes, productTagsRes] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, category_id, memo')
+      .select('id, name, category_id, memo, is_archived')
       .eq('id', id)
       .single(),
     supabase.from('stores').select('*').order('sort_order'),
@@ -78,6 +79,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <ProductMemoEditor id={id} initialMemo={product.memo || ''} />
+
+      <ProductArchiveToggle productId={id} initialIsArchived={!!product.is_archived} />
 
       <QuickPurchaseForm productId={id} stores={stores || []} lastStoreId={lastStoreId} />
       

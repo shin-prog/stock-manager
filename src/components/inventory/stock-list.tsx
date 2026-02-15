@@ -5,6 +5,7 @@ import { adjustStock } from '@/app/actions';
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
+import { cn } from '@/lib/utils';
 
 import Link from 'next/link';
 
@@ -44,6 +45,12 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
     ? optimisticItems 
     : optimisticItems.filter(item => item.category === selectedCategory))
     .sort((a, b) => {
+      // 1. アーカイブ済みの商品を常に下にする
+      if (a.is_archived !== b.is_archived) {
+        return a.is_archived ? 1 : -1;
+      }
+      
+      // 2. その中で在庫数でソート
       return sortOrder === 'desc' 
         ? b.quantity - a.quantity 
         : a.quantity - b.quantity;
@@ -80,15 +87,30 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
       </FilterPanel>
 
       {filteredItems.map((item) => (
-        <div key={item.product_id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+        <div 
+          key={item.product_id} 
+          className={cn(
+            "flex items-center justify-between p-3 border rounded-lg shadow-sm transition-opacity",
+            item.is_archived ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200"
+          )}
+        >
           <div className="flex-1 min-w-0 pr-2">
             <Link href={`/products/${item.product_id}`} className="hover:underline block truncate">
-              <div className="font-bold text-base truncate">{item.product_name}</div>
+              <div className={cn(
+                "font-bold text-base truncate",
+                item.is_archived && "text-slate-500"
+              )}>
+                {item.product_name}
+                {item.is_archived && <span className="ml-2 text-[10px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded font-normal">もう買わない</span>}
+              </div>
             </Link>
             <div className="flex items-center gap-2 mt-1">
               <div className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
               <div className="text-sm text-gray-700">
-                在庫: <span className="text-lg font-bold text-black mx-0.5">{item.quantity}</span>
+                在庫: <span className={cn(
+                  "text-lg font-bold mx-0.5",
+                  item.is_archived ? "text-slate-500" : "text-black"
+                )}>{item.quantity}</span>
               </div>
             </div>
           </div>
