@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SubmitButton } from './submit-button';
 
-export function ProductForm({ units, categories }: { units: any[], categories: any[] }) {
+import { TagSelector } from '@/components/tags/tag-selector';
+
+export function ProductForm({ units, categories, allTags }: { units: any[], categories: any[], allTags: any[] }) {
   const [categoryId, setCategoryId] = React.useState('');
+  const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
 
   return (
     <form 
@@ -36,6 +39,18 @@ export function ProductForm({ units, categories }: { units: any[], categories: a
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>タグ</Label>
+        {selectedTagIds.map(id => (
+          <input key={id} type="hidden" name="tagIds" value={id} />
+        ))}
+        <TagSelector 
+          allTags={allTags} 
+          selectedTagIds={selectedTagIds} 
+          onChange={setSelectedTagIds} 
+        />
       </div>
 
       {/* Hidden Unit Selection (Default to 'Piece' / '個') */}

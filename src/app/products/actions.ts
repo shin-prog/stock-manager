@@ -10,15 +10,22 @@ export async function createProduct(formData: FormData) {
   const name = formData.get('name') as string;
   const categoryId = formData.get('categoryId') as string;
   const defaultUnitId = formData.get('defaultUnitId') as string;
+  const tagIds = formData.getAll('tagIds') as string[];
 
-  const { error } = await supabase.from('products').insert({
+  const { data: product, error } = await supabase.from('products').insert({
     name,
     category_id: categoryId === 'none' || !categoryId ? null : categoryId,
     default_unit_id: defaultUnitId,
-  });
+  }).select().single();
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (tagIds.length > 0) {
+    await supabase.from('product_tags').insert(
+      tagIds.map(tagId => ({ product_id: product.id, tag_id: tagId }))
+    );
   }
 
   revalidatePath('/products');
