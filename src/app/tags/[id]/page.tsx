@@ -2,6 +2,17 @@ import { createClient } from '@/utils/supabase/server';
 import { TagBadge } from '@/components/tags/tag-badge';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import { Product, PurchaseLine } from '@/types';
+
+type AggregatedHistoryItem = {
+  id: string;
+  date: string;
+  store: string;
+  productName: string;
+  price: number;
+  sizeInfo: string | null;
+};
 
 export default async function TagDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,11 +33,11 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
     .select('products(id, name, category_id)')
     .eq('tag_id', id);
 
-  const products = productsData?.map(p => p.products) || [];
-  const productIds = products.map(p => (p as any).id);
+  const products = (productsData?.map(p => p.products) as unknown as Product[]) || [];
+  const productIds = products.map(p => p.id);
 
   // Fetch aggregated purchase history
-  let history: any[] = [];
+  let history: AggregatedHistoryItem[] = [];
   if (productIds.length > 0) {
     const { data: lines } = await supabase
       .from('purchase_lines')
@@ -45,7 +56,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
 
     history = lines?.map((line: any) => ({
       id: line.id,
-      date: new Date(line.purchases?.purchased_at).toLocaleDateString('ja-JP'),
+      date: formatDate(line.purchases?.purchased_at),
       store: line.purchases?.stores?.name || '不明なお店',
       productName: line.products?.name,
       price: line.unit_price,
@@ -65,7 +76,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
           <Package size={20} className="text-slate-400" /> 対象商品 ({products.length})
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {products.map((p: any) => (
+          {products.map((p) => (
             <Link 
               key={p.id} 
               href={`/products/${p.id}`}
@@ -86,8 +97,8 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
       <div className="space-y-4 pb-24">
         <h2 className="text-lg font-semibold border-b pb-2">統合価格履歴</h2>
         <div className="border rounded-md divide-y bg-white">
-          {history.map((item, i) => (
-            <div key={i} className="p-3 flex justify-between items-center">
+          {history.map((item) => (
+            <div key={item.id} className="p-3 flex justify-between items-center">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm">{item.productName}</span>
@@ -102,7 +113,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
               </div>
               <div className="text-right">
                 <div className="font-bold text-lg">
-                  {item.price}<span className="text-xs ml-0.5">円</span>
+                  {formatCurrency(item.price)}
                 </div>
               </div>
             </div>

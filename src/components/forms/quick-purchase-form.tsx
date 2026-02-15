@@ -10,6 +10,7 @@ import { submitPurchase } from '@/app/actions';
 import { useTransition } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
+import { Store } from '@/types';
 
 export function QuickPurchaseForm({ 
   productId, 
@@ -17,7 +18,7 @@ export function QuickPurchaseForm({
   lastStoreId
 }: { 
   productId: string, 
-  stores: any[],
+  stores: Store[],
   lastStoreId?: string
 }) {
   const [isPending, startTransition] = useTransition();
@@ -46,8 +47,7 @@ export function QuickPurchaseForm({
             productId, 
             quantity, 
             price: Number(price), 
-            sizeInfo,
-            unitId: '' 
+            sizeInfo
           }] 
         });
         setPrice('');

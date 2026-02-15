@@ -29,13 +29,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { useSortableList } from '@/hooks/use-sortable-list';
 import { FilterPanel } from '@/components/ui/filter-panel';
 
+import { Store } from '@/types';
+
 function SortableStoreRow({ 
   store, 
   index, 
   isSorting, 
   isDragging
 }: { 
-  store: any, 
+  store: Store, 
   index: number, 
   isSorting: boolean, 
   isDragging?: boolean
@@ -82,7 +84,7 @@ function SortableStoreRow({
   );
 }
 
-export function StoreListClient({ stores }: { stores: any[] }) {
+export function StoreListClient({ stores }: { stores: Store[] }) {
   // 初期表示用にソート
   const sortedInitialStores = useMemo(() => 
     [...stores].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),

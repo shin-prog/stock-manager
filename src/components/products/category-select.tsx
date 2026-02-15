@@ -4,7 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updateProductCategory } from '@/app/products/actions';
 import { useState } from 'react';
 
-export function CategorySelect({ id, initialCategoryId, categories }: { id: string, initialCategoryId: string | null, categories: any[] }) {
+import { Category } from '@/types';
+
+export function CategorySelect({ id, initialCategoryId, categories }: { id: string, initialCategoryId: string | null, categories: Category[] }) {
   const [loading, setLoading] = useState(false);
 
   const handleChange = async (newCategoryId: string) => {

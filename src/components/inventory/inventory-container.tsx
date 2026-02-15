@@ -1,5 +1,14 @@
 import { StockList } from "@/components/inventory/stock-list";
 import { createClient } from "@/utils/supabase/server";
+import { Category, Product, Stock } from "@/types";
+
+export interface StockItem {
+  product_id: string;
+  product_name: string;
+  category: string;
+  quantity: number;
+  is_archived: boolean;
+}
 
 export async function InventoryList() {
   const supabase = await createClient();
@@ -31,12 +40,12 @@ export async function InventoryList() {
     return <div>Error loading inventory</div>;
   }
 
-  const categoriesMap = new Map(
-    (categoriesData || []).map((c) => [c.id, c.name]),
+  const categoriesMap = new Map<string, string>(
+    (categoriesData as Category[] || []).map((c) => [c.id, c.name]),
   );
 
   // Transform data for the component
-  const stockItems = stockData.map((item: any) => ({
+  const stockItems: StockItem[] = (stockData as any[]).map((item) => ({
     product_id: item.product_id,
     product_name: item.products?.name || "Unknown Product",
     category: categoriesMap.get(item.products?.category_id) || "未分類",

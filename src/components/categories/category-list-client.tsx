@@ -28,13 +28,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { useSortableList } from '@/hooks/use-sortable-list';
 import { FilterPanel } from '@/components/ui/filter-panel';
 
+import { Category } from '@/types';
+
 function SortableCategoryRow({ 
   cat, 
   index, 
   isSorting, 
   isDragging 
 }: { 
-  cat: any, 
+  cat: Category, 
   index: number, 
   isSorting: boolean, 
   isDragging?: boolean
@@ -90,7 +92,7 @@ function SortableCategoryRow({
   );
 }
 
-export function CategoryListClient({ categories }: { categories: any[] }) {
+export function CategoryListClient({ categories }: { categories: Category[] }) {
   const sortedInitialCategories = useMemo(() => 
     [...categories].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
     [categories]

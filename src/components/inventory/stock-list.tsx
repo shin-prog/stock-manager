@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
+import { StockItem } from './inventory-container';
 
 import Link from 'next/link';
 
-export function StockList({ stockItems, categories }: { stockItems: any[], categories: string[] }) {
+export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: string[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   

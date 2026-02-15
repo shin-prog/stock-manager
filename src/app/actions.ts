@@ -2,8 +2,9 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-async function updateStockQuantity(supabase: any, productId: string, delta: number) {
+async function updateStockQuantity(supabase: SupabaseClient, productId: string, delta: number) {
   const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
 
   if (stock) {
@@ -20,7 +21,20 @@ async function updateStockQuantity(supabase: any, productId: string, delta: numb
   }
 }
 
-export async function submitPurchase(formData: any) {
+interface PurchaseLineInput {
+  productId: string;
+  quantity: number;
+  price: number;
+  sizeInfo: string;
+}
+
+interface SubmitPurchaseData {
+  storeId: string;
+  date: string;
+  lines: PurchaseLineInput[];
+}
+
+export async function submitPurchase(formData: SubmitPurchaseData) {
   const supabase = await createClient();
   const { storeId, date, lines } = formData;
 
@@ -28,7 +42,7 @@ export async function submitPurchase(formData: any) {
   const { data: purchase, error: pError } = await supabase.from('purchases').insert({
     store_id: storeId,
     purchased_at: new Date(date).toISOString(),
-    total_cost: lines.reduce((sum: number, line: any) => sum + (line.quantity * line.price), 0)
+    total_cost: lines.reduce((sum, line) => sum + (line.quantity * line.price), 0)
   }).select().single();
 
   if (pError) throw new Error(pError.message);

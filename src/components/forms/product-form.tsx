@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SubmitButton } from './submit-button';
-
 import { TagSelector } from '@/components/tags/tag-selector';
+import { Category, Tag } from '@/types';
 
-export function ProductForm({ categories, allTags }: { categories: any[], allTags: any[] }) {
+export function ProductForm({ categories, allTags }: { categories: Category[], allTags: Tag[] }) {
   const [categoryId, setCategoryId] = React.useState('');
   const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
 

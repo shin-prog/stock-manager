@@ -1,8 +1,17 @@
 import { createClient } from '@/utils/supabase/server';
-import { normalizePrice } from '@/lib/logic';
-import { ProductUnit } from '@/types';
 import { DeletePurchaseButton } from './delete-purchase-button';
 import { SizeInfoEditor } from './size-info-editor';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import { PurchaseLine, Purchase, Store } from '@/types';
+
+type PriceHistoryItem = {
+  id: string;
+  date: string;
+  store: string;
+  price: number;
+  sizeInfo: string | null;
+  quantity: number;
+};
 
 export async function PriceHistoryList({ productId }: { productId: string }) {
   const supabase = await createClient();
@@ -27,11 +36,11 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
     return <div className="text-gray-500">購入履歴がありません。</div>;
   }
 
-  // Normalize prices
-  const history = lines.map((line: any) => {
+  // Transform to PriceHistoryItem
+  const history: PriceHistoryItem[] = (lines as any[]).map((line) => {
     return {
       id: line.id,
-      date: new Date(line.purchases?.purchased_at).toLocaleDateString('ja-JP'),
+      date: formatDate(line.purchases?.purchased_at),
       store: line.purchases?.stores?.name || '不明なお店',
       price: line.unit_price,
       sizeInfo: line.size_info,
@@ -43,8 +52,8 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
     <div className="space-y-4">
       <h3 className="font-semibold text-lg">価格履歴</h3>
       <div className="border rounded-md divide-y">
-        {history.map((item, i) => (
-          <div key={i} className="p-3 flex justify-between items-center group">
+        {history.map((item) => (
+          <div key={item.id} className="p-3 flex justify-between items-center group">
             <div>
               <div className="font-medium">{item.store}</div>
               <div className="text-xs text-gray-500 flex items-center gap-1">
@@ -55,7 +64,7 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className="font-bold">
-                  {item.price}円
+                  {formatCurrency(item.price)}
                 </div>
               </div>
               <DeletePurchaseButton id={item.id} productId={productId} />

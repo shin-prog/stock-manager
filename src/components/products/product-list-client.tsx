@@ -15,13 +15,14 @@ import { CategorySelect } from '@/components/products/category-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
+import { Product, Category } from '@/types';
 
 export function ProductListClient({ 
   products, 
   categories 
 }: { 
-  products: any[], 
-  categories: any[] 
+  products: Product[], 
+  categories: Category[] 
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
 
