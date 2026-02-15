@@ -33,7 +33,7 @@ Vercel の `Settings > Environment Variables` にて、`NEXT_PUBLIC_SUPABASE_URL
 
 - **プラットフォーム**: Supabase
 - **データベース**: PostgreSQL
-- **認証**: なし（個人用ツールの前提で、現時点では RLS を全開放設定）
+- **認証**: Next.js Middleware による簡易認証（URLクエリパラメータ `?key=SECRET` で認証、Cookie で持続）。個人用ツールの前提で、RLS は全開放設定。
 - **接続方式**: サーバーコンポーネントからは `createClient` (utils/supabase/server.ts) を使用し、Cookie 経由でセッション情報を維持
 
 ## 3. 主要な環境変数 (Vercel / .env.local)
@@ -42,6 +42,7 @@ Vercel の `Settings > Environment Variables` にて、`NEXT_PUBLIC_SUPABASE_URL
 
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase プロジェクトの URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の Anon Key
+- `AUTH_SECRET_KEY`: 簡易認証用の秘密キー（未設定時は認証スキップ）。Vercel では Production / Preview 両方に設定が必要。
 
 ## 4. 開発者向けTips
 
