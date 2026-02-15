@@ -26,13 +26,13 @@ export function StoreNameEditor({ id, initialName }: { id: string, initialName: 
 
   if (!isEditing) {
     return (
-      <div className="flex items-center gap-2 group">
+      <div className="flex items-center gap-2">
         <span className="font-medium">{name}</span>
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={() => setIsEditing(true)}
-          className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600 transition-opacity"
         >
           <Pencil size={14} />
         </Button>
