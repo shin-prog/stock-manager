@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
 import { toggleProductArchive } from "@/app/products/actions";
-import { Archive, ArchiveRestore, AlertCircle } from "lucide-react";
+import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductArchiveToggleProps {
@@ -20,15 +19,6 @@ export function ProductArchiveToggle({
 
   const handleToggle = async () => {
     const nextState = !isArchived;
-    if (
-      nextState &&
-      !confirm(
-        "「もう買わない」に設定しますか？\n設定すると在庫一覧の最後に表示されるようになります。",
-      )
-    ) {
-      return;
-    }
-
     setIsArchived(nextState);
     startTransition(async () => {
       try {
@@ -41,54 +31,27 @@ export function ProductArchiveToggle({
   };
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border p-4 mb-6 transition-all",
-        isArchived
-          ? "bg-slate-50 border-slate-200"
-          : "bg-blue-50/30 border-blue-100",
-      )}
-    >
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              "p-2 rounded-full",
-              isArchived ? "bg-slate-200 text-slate-600" : "bg-blue-100 text-blue-600",
-            )}
-          >
-            {isArchived ? <Archive size={20} /> : <ArchiveRestore size={20} />}
-          </div>
-          <div>
-            <div className="font-bold text-sm">
-              {isArchived ? "もう買わない商品" : "今後も買う商品"}
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              {isArchived
-                ? "この商品はリストの下位に表示されます"
-                : "この商品は在庫数に応じてリストの上位に表示されます"}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant={isArchived ? "outline" : "default"}
-          size="sm"
-          onClick={handleToggle}
-          disabled={isPending}
-          className={cn(
-            "shrink-0 font-bold",
-            !isArchived && "bg-blue-600 hover:bg-blue-700",
-          )}
-        >
-          {isArchived ? "買うリストに戻す" : "もう買わない"}
-        </Button>
+    <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg mb-6 shadow-sm">
+      <div className="flex items-center gap-2">
+        <Archive size={16} className={cn(isArchived ? "text-amber-500" : "text-slate-400")} />
+        <span className="text-sm font-bold text-slate-700">今後も継続して購入する</span>
       </div>
-      {isArchived && (
-        <div className="mt-3 flex items-center gap-1.5 text-[10px] text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100">
-          <AlertCircle size={12} />
-          <span>在庫があっても、在庫一覧の最後に並びます</span>
-        </div>
-      )}
+      
+      <button
+        onClick={handleToggle}
+        disabled={isPending}
+        className={cn(
+          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+          !isArchived ? "bg-blue-600" : "bg-slate-200"
+        )}
+      >
+        <span
+          className={cn(
+            "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform",
+            !isArchived ? "translate-x-5" : "translate-x-0"
+          )}
+        />
+      </button>
     </div>
   );
 }
