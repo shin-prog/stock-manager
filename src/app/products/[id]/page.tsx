@@ -10,39 +10,49 @@ import { Trash2 } from 'lucide-react';
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: product } = await supabase
-    .from('products')
-    .select('id, name, category_id, memo')
-    .eq('id', id)
-    .single();
+  const [productRes, storesRes, allTagsRes, productTagsRes] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, category_id, memo')
+      .eq('id', id)
+      .single(),
+    supabase.from('stores').select('*').order('sort_order'),
+    supabase.from('tags').select('*').order('name'),
+    supabase
+      .from('product_tags')
+      .select('tags(*)')
+      .eq('product_id', id)
+  ]);
+
+  const { data: product } = productRes;
+  const { data: stores } = storesRes;
+  const { data: allTags } = allTagsRes;
+  const { data: productTagsData } = productTagsRes;
 
   if (!product) return <div>商品が見つかりません</div>;
 
-  const { data: stores } = await supabase.from('stores').select('*').order('sort_order');
-  const { data: allTags } = await supabase.from('tags').select('*').order('name');
-  const { data: productTagsData } = await supabase
-    .from('product_tags')
-    .select('tags(*)')
-    .eq('product_id', id);
-
   const productTags = productTagsData?.map(item => item.tags) || [];
 
-  // この商品の直近の購入店を取得
-  const { data: lastPurchaseForProduct } = await supabase
-    .from('purchase_lines')
-    .select('purchases(store_id)')
-    .eq('product_id', id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // この商品の直近の購入店とカテゴリ情報を並列取得
+  const [lastPurchaseRes, categoryRes] = await Promise.all([
+    supabase
+      .from('purchase_lines')
+      .select('purchases(store_id)')
+      .eq('product_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('categories')
+      .select('name')
+      .eq('id', product.category_id)
+      .maybeSingle()
+  ]);
+
+  const lastPurchaseForProduct = lastPurchaseRes.data;
+  const category = categoryRes.data;
 
   const lastStoreId = (lastPurchaseForProduct?.purchases as any)?.store_id;
-
-  const { data: category } = await supabase
-    .from('categories')
-    .select('name')
-    .eq('id', product.category_id)
-    .maybeSingle();
 
   return (
     <div className="container mx-auto p-4 max-w-lg pb-24">

@@ -1,26 +1,23 @@
-import { createClient } from '@/utils/supabase/server';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { ProductListClient } from '@/components/products/product-list-client';
+import { ProductListContainer, ProductListSkeleton } from '@/components/products/product-list-container';
 
-export default async function ProductsPage() {
-  const supabase = await createClient();
-  const { data: products } = await supabase.from('products').select('*').order('name');
-  const { data: categories } = await supabase.from('categories').select('*').order('sort_order');
-
+export default function ProductsPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-4 max-w-lg pb-24">
+      {/* ヘッダー部分は即座に表示される */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">商品一覧</h1>
+        <h1 className="text-xl font-bold">商品一覧</h1>
         <Link href="/products/new">
-          <Button>+ 商品追加</Button>
+          <Button size="sm">+ 商品追加</Button>
         </Link>
       </div>
 
-      <ProductListClient 
-        products={products || []} 
-        categories={categories || []} 
-      />
+      {/* リスト部分のみストリーミング表示 */}
+      <Suspense fallback={<ProductListSkeleton />}>
+        <ProductListContainer />
+      </Suspense>
     </div>
   );
 }

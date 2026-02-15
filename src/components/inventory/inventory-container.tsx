@@ -1,0 +1,73 @@
+import { StockList } from "@/components/inventory/stock-list";
+import { createClient } from "@/utils/supabase/server";
+
+export async function InventoryList() {
+  const supabase = await createClient();
+
+  // Fetch stock and categories in parallel
+  const [stockRes, categoriesRes] = await Promise.all([
+    supabase
+      .from("stock")
+      .select(
+        `
+        product_id,
+        quantity,
+        products (
+          name,
+          category_id,
+          units (
+            symbol
+          )
+        )
+      `,
+      )
+      .order("quantity", { ascending: false }),
+    supabase.from("categories").select("*").order("sort_order"),
+  ]);
+
+  const { data: stockData, error } = stockRes;
+  const { data: categoriesData } = categoriesRes;
+
+  if (error || !stockData) {
+    console.error(error);
+    return <div>Error loading inventory</div>;
+  }
+
+  const categoriesMap = new Map(
+    (categoriesData || []).map((c) => [c.id, c.name]),
+  );
+
+  // Transform data for the component
+  const stockItems = stockData.map((item: any) => ({
+    product_id: item.product_id,
+    product_name: item.products?.name || "Unknown Product",
+    category: categoriesMap.get(item.products?.category_id) || "未分類",
+    quantity: item.quantity,
+    unit_symbol: item.products?.units?.symbol || "",
+  }));
+
+  const categories = (categoriesData || []).map((c) => c.name);
+
+  if (stockItems.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        在庫がありません。「買い物」から追加してください。
+      </div>
+    );
+  }
+
+  return <StockList stockItems={stockItems} categories={categories} />;
+}
+
+export function InventorySkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="h-20 bg-slate-100 rounded-lg border border-slate-200"
+        />
+      ))}
+    </div>
+  );
+}
