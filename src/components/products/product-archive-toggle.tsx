@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toggleProductArchive } from "@/app/products/actions";
-import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Loader2, RefreshCw } from "lucide-react";
 
 interface ProductArchiveToggleProps {
   productId: string;
@@ -31,27 +31,27 @@ export function ProductArchiveToggle({
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg mb-6 shadow-sm">
-      <div className="flex items-center gap-2">
-        <Archive size={16} className={cn(isArchived ? "text-amber-500" : "text-slate-400")} />
-        <span className="text-sm font-bold text-slate-700">今後も継続して購入する</span>
-      </div>
-      
-      <button
-        onClick={handleToggle}
-        disabled={isPending}
-        className={cn(
-          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-          !isArchived ? "bg-blue-600" : "bg-slate-200"
-        )}
-      >
-        <span
+    <div className="inline-flex items-center gap-2 h-8 px-2 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
+      <div className="flex items-center gap-1.5 cursor-pointer" onClick={handleToggle}>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+          継続購入
+        </span>
+
+        <div
           className={cn(
-            "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform",
-            !isArchived ? "translate-x-5" : "translate-x-0"
+            "relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full transition-colors",
+            !isArchived ? "bg-green-500" : "bg-slate-300"
           )}
-        />
-      </button>
+        >
+          <span
+            className={cn(
+              "pointer-events-none block h-3 w-3 rounded-full bg-white shadow-sm transition-transform",
+              !isArchived ? "translate-x-3.5" : "translate-x-0.5"
+            )}
+          />
+        </div>
+      </div>
+      {isPending && <Loader2 className="h-3 w-3 animate-spin text-slate-400" />}
     </div>
   );
 }

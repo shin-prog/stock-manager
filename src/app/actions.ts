@@ -105,3 +105,103 @@ export async function adjustStock(productId: string, amount: number, reason: str
 
   revalidatePath('/inventory');
 }
+
+export async function updateProductCategory(productId: string, categoryId: string | null) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('products')
+    .update({ category_id: categoryId })
+    .eq('id', productId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/inventory');
+}
+
+export async function batchUpdateInventory(updates: {
+  productId: string,
+  quantityDelta: number,
+  categoryId: string | null
+}[]) {
+  const supabase = await createClient();
+
+  // 1. Filter out quantity adjustments
+  const adjustments = updates
+    .filter(u => u.quantityDelta !== 0)
+    .map(u => ({
+      product_id: u.productId,
+      change_amount: u.quantityDelta,
+      reason: 'batch_edit',
+      adjusted_at: new Date().toISOString()
+    }));
+
+  if (adjustments.length > 0) {
+    // Record adjustments in bulk
+    await supabase.from('stock_adjustments').insert(adjustments);
+
+    // Update snapshots - sequentially to avoid race conditions on same products, 
+    // though here they should be unique product IDs.
+    for (const adj of adjustments) {
+      await updateStockQuantity(supabase, adj.product_id, adj.change_amount);
+    }
+  }
+
+  // 2. Handle category updates
+  // For simplicity and to ensure correct state, we iterate. 
+  // If performance becomes a bottleneck, this could be optimized with a custom RPC.
+  for (const update of updates) {
+    await supabase
+      .from('products')
+      .update({ category_id: update.categoryId })
+      .eq('id', update.productId);
+  }
+
+  revalidatePath('/inventory');
+}
+
+export async function setStock(productId: string, newQuantity: number) {
+  const supabase = await createClient();
+
+  const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
+
+  if (stock) {
+    const oldQuantity = Number(stock.quantity);
+    const delta = newQuantity - oldQuantity;
+
+    if (delta !== 0) {
+      // Record Adjustment
+      await supabase.from('stock_adjustments').insert({
+        product_id: productId,
+        change_amount: delta,
+        reason: 'manual_update',
+        adjusted_at: new Date().toISOString()
+      });
+
+      // Update Snapshot
+      await supabase.from('stock').update({
+        quantity: newQuantity,
+        last_updated: new Date().toISOString()
+      }).eq('id', stock.id);
+    }
+  } else {
+    // Insert new stock
+    await (supabase as any).from('stock').insert({
+      product_id: productId,
+      quantity: newQuantity,
+      last_updated: new Date().toISOString()
+    });
+
+    if (newQuantity !== 0) {
+      await (supabase as any).from('stock_adjustments').insert({
+        product_id: productId,
+        change_amount: newQuantity,
+        reason: 'initial_setup',
+        adjusted_at: new Date().toISOString()
+      });
+    }
+  }
+
+  revalidatePath('/inventory');
+  revalidatePath(`/products/${productId}`);
+}
