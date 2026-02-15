@@ -14,6 +14,7 @@ import { DeleteProductButton } from '@/components/products/delete-product-button
 import { CategorySelect } from '@/components/products/category-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
+import { cn } from '@/lib/utils';
 
 export function ProductListClient({ 
   products, 
@@ -24,13 +25,21 @@ export function ProductListClient({
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
 
-  const filteredProducts = selectedCategoryId === 'all'
+  const filteredProducts = (selectedCategoryId === 'all'
     ? products
     : products.filter(p => 
         selectedCategoryId === 'none' 
           ? !p.category_id 
           : p.category_id === selectedCategoryId
-      );
+      )
+  ).sort((a, b) => {
+    // 1. アーカイブ済みの商品を常に下にする
+    if (a.is_archived !== b.is_archived) {
+      return a.is_archived ? 1 : -1;
+    }
+    // 2. その中で名前順
+    return (a.name || '').localeCompare(b.name || '');
+  });
 
   return (
     <div className="space-y-4">
@@ -51,7 +60,7 @@ export function ProductListClient({
         </FilterItem>
       </FilterPanel>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md bg-white">
         <Table>
           <TableHeader>
             <TableRow>
@@ -62,9 +71,20 @@ export function ProductListClient({
           </TableHeader>
           <TableBody>
             {filteredProducts.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow 
+                key={product.id}
+                className={cn(
+                  product.is_archived && "bg-slate-50 opacity-60"
+                )}
+              >
                 <TableCell className="font-medium">
-                  <Link href={`/products/${product.id}`} className="hover:underline text-blue-600">
+                  <Link 
+                    href={`/products/${product.id}`} 
+                    className={cn(
+                      "hover:underline",
+                      product.is_archived ? "text-slate-500" : "text-blue-600"
+                    )}
+                  >
                     {product.name}
                   </Link>
                 </TableCell>

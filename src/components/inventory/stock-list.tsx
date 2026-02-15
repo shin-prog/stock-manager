@@ -101,7 +101,6 @@ export function StockList({ stockItems, categories }: { stockItems: any[], categ
                 item.is_archived && "text-slate-500"
               )}>
                 {item.product_name}
-                {item.is_archived && <span className="ml-2 text-[10px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded font-normal">もう買わない</span>}
               </div>
             </Link>
             <div className="flex items-center gap-2 mt-1">
