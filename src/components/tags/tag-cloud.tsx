@@ -94,18 +94,18 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
         {tags.map((tag) => (
           <div key={tag.id} className="group relative">
             <Link href={`/tags/${tag.id}`}>
-              <TagBadge 
-                name={tag.name} 
-                colorKey={tag.color_key} 
+              <TagBadge
+                name={tag.name}
+                colorKey={tag.color_key}
                 className="text-sm py-2 px-4 cursor-pointer hover:scale-105 hover:shadow-md ring-offset-2"
               />
             </Link>
-            <button 
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 startEdit(tag);
               }}
-              className="absolute -top-3 -right-3 bg-white border border-slate-300 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md hover:bg-slate-50 z-20"
+              className="absolute -top-3 -right-3 bg-white border border-slate-300 rounded-full p-1.5 transition-all shadow-md hover:bg-slate-50 z-20"
             >
               <Settings2 size={14} className="text-slate-700" />
             </button>
@@ -124,7 +124,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
               <Plus size={18} className="mr-1" /> タグを追加
             </Button>
           </DialogTrigger>
-          <DialogContent 
+          <DialogContent
             className="bg-white border-2 border-slate-400 shadow-2xl"
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
@@ -134,10 +134,10 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
             <div className="space-y-6 py-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-bold text-slate-700">タグ名</Label>
-                <Input 
-                  id="name" 
-                  value={newName} 
-                  onChange={e => setNewName(e.target.value)} 
+                <Input
+                  id="name"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
                   placeholder="例: 飲料、要冷蔵など"
                   className="border-slate-300 focus:border-slate-500 h-11"
                 />
@@ -163,9 +163,9 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
             </div>
             <DialogFooter className="flex justify-between items-center sm:justify-between border-t pt-4">
               {isEditing ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold"
                   onClick={() => handleDelete(isEditing.id)}
                   disabled={loading}
@@ -173,8 +173,8 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                   <Trash2 size={18} className="mr-1" /> 削除
                 </Button>
               ) : <div />}
-              <Button 
-                onClick={isEditing ? handleUpdate : handleCreate} 
+              <Button
+                onClick={isEditing ? handleUpdate : handleCreate}
                 disabled={loading || !newName}
                 className="px-8 font-bold h-11"
               >

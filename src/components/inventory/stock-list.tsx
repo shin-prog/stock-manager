@@ -13,19 +13,19 @@ import Link from 'next/link';
 export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: string[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
-  
+
   // 楽観的UIのためのフック
   const [optimisticItems, addOptimisticItem] = useOptimistic(
     stockItems,
     (state, { productId, amount }: { productId: string, amount: number }) => {
-      return state.map(item => 
-        item.product_id === productId 
-          ? { ...item, quantity: item.quantity + amount }
+      return state.map(item =>
+        item.product_id === productId
+          ? { ...item, quantity: Math.max(0, item.quantity + amount) }
           : item
       );
     }
   );
-  
+
   const handleAdjust = async (productId: string, amount: number) => {
     // 1. 即座にUIを更新（楽観的更新）
     startTransition(() => {
@@ -42,18 +42,18 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     }
   };
 
-  const filteredItems = (selectedCategory === 'all' 
-    ? optimisticItems 
+  const filteredItems = (selectedCategory === 'all'
+    ? optimisticItems
     : optimisticItems.filter(item => item.category === selectedCategory))
     .sort((a, b) => {
       // 1. アーカイブ済みの商品を常に下にする
       if (a.is_archived !== b.is_archived) {
         return a.is_archived ? 1 : -1;
       }
-      
+
       // 2. その中で在庫数でソート
-      return sortOrder === 'desc' 
-        ? b.quantity - a.quantity 
+      return sortOrder === 'desc'
+        ? b.quantity - a.quantity
         : a.quantity - b.quantity;
     });
 
@@ -88,8 +88,8 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
       </FilterPanel>
 
       {filteredItems.map((item) => (
-        <div 
-          key={item.product_id} 
+        <div
+          key={item.product_id}
           className={cn(
             "flex items-center justify-between p-3 border rounded-lg shadow-sm transition-opacity",
             item.is_archived ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200"
@@ -115,16 +115,17 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               className="h-8 w-8 p-0"
               onClick={() => handleAdjust(item.product_id, -1)}
+              disabled={item.quantity <= 0}
             >
               -1
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               className="h-8 w-8 p-0"
               onClick={() => handleAdjust(item.product_id, 1)}
@@ -134,7 +135,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           </div>
         </div>
       ))}
-      
+
       {filteredItems.length === 0 && (
         <div className="text-center text-gray-500 py-8">
           該当する商品がありません。

@@ -8,8 +8,9 @@ async function updateStockQuantity(supabase: SupabaseClient, productId: string, 
   const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
 
   if (stock) {
-    await supabase.from('stock').update({ 
-      quantity: Number(stock.quantity) + delta,
+    const newQuantity = Math.max(0, Number(stock.quantity) + delta);
+    await supabase.from('stock').update({
+      quantity: newQuantity,
       last_updated: new Date().toISOString()
     }).eq('id', stock.id);
   } else {

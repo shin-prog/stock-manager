@@ -14,7 +14,7 @@ export async function createCategory(formData: FormData) {
     .order('sort_order', { ascending: false })
     .limit(1)
     .single();
-  
+
   const nextOrder = (latest?.sort_order || 0) + 1;
 
   const { error } = await supabase.from('categories').insert({
@@ -26,6 +26,20 @@ export async function createCategory(formData: FormData) {
 
   revalidatePath('/categories');
   redirect('/categories');
+}
+
+export async function updateCategoryName(id: string, name: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('categories')
+    .update({ name })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/categories');
+  revalidatePath('/products');
+  revalidatePath('/inventory');
 }
 
 export async function updateCategoriesOrder(items: { id: string, sort_order: number }[]) {

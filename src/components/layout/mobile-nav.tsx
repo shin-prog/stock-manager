@@ -15,11 +15,6 @@ export function MobileNav() {
         <Package size={24} />
         <span className="text-xs">在庫</span>
       </Link>
-      
-      <Link href="/products" className={`flex flex-col items-center p-2 ${isActive('/products') ? 'text-blue-600' : 'text-gray-500'}`}>
-        <List size={24} />
-        <span className="text-xs">商品</span>
-      </Link>
 
       <Link href="/tags" className={`flex flex-col items-center p-2 ${isActive('/tags') ? 'text-blue-600' : 'text-gray-500'}`}>
         <Tag size={24} />

@@ -58,7 +58,7 @@ export async function InventoryList() {
   if (stockItems.length === 0) {
     return (
       <div className="text-center text-gray-500 py-8">
-        在庫がありません。「買い物」から追加してください。
+        商品が登録されていません。「+ 商品追加」から追加してください。
       </div>
     );
   }
