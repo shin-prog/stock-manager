@@ -1,8 +1,8 @@
 # プロジェクト環境・インフラ構成書
 
 ## 1. サービス URL
-- **本番環境 (Production)**: [https://stock-manager-one-zeta.vercel.app/](https://stock-manager-one-zeta.vercel.app/)
-- **開発/プレビュー環境 (Preview)**: `develop` ブランチへのプッシュで自動生成
+- **本番環境 (Production)**: [https://stock-manager-ten-jet.vercel.app/inventory](https://stock-manager-ten-jet.vercel.app/inventory)
+- **開発/プレビュー環境 (Preview)**: develop ブランチ [開発環境](https://stock-manager-git-develop-shin-progs-projects.vercel.app)
 - **GitHub リポジトリ**: [https://github.com/shin-prog/stock-manager](https://github.com/shin-prog/stock-manager)
 
 ## 2. 環境分離の方針 (PRD / DEV)

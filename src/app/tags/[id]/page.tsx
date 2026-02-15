@@ -57,7 +57,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
     history = lines?.map((line: any) => ({
       id: line.id,
       date: formatDate(line.purchases?.purchased_at),
-      store: line.purchases?.stores?.name || '不明なお店',
+      store: line.purchases?.stores?.name || '(不明)',
       productName: line.products?.name,
       price: line.unit_price,
       sizeInfo: line.size_info
@@ -77,8 +77,8 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
         </h2>
         <div className="grid grid-cols-2 gap-3">
           {products.map((p) => (
-            <Link 
-              key={p.id} 
+            <Link
+              key={p.id}
               href={`/products/${p.id}`}
               className="p-3 border rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium flex items-center gap-2"
             >

@@ -41,7 +41,7 @@ export async function PriceHistoryList({ productId }: { productId: string }) {
     return {
       id: line.id,
       date: formatDate(line.purchases?.purchased_at),
-      store: line.purchases?.stores?.name || '不明なお店',
+      store: line.purchases?.stores?.name || '(不明)',
       price: line.unit_price,
       sizeInfo: line.size_info,
       quantity: line.quantity
