@@ -15,8 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PRESET_COLORS } from '@/lib/colors';
-import { createTag, updateTag, deleteTag } from '@/app/tags/actions';
+import { createTag, updateTag, deleteTag, bulkUpdateTagColors } from '@/app/tags/actions';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Palette, CheckCircle2 } from 'lucide-react';
 
 interface Tag {
   id: string;
@@ -31,6 +33,39 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   const [newColor, setNewColor] = useState('slate');
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Selection state for bulk actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [isBatchColorDialogOpen, setIsBatchColorDialogOpen] = useState(false);
+
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleBulkColorUpdate = async (colorKey: string) => {
+    if (selectedIds.size === 0) return;
+    setLoading(true);
+    try {
+      await bulkUpdateTagColors(Array.from(selectedIds), colorKey);
+      setTags(tags.map(t =>
+        selectedIds.has(t.id) ? { ...t, color_key: colorKey } : t
+      ));
+      setIsBatchColorDialogOpen(false);
+      setIsBatchMode(false);
+      setSelectedIds(new Set());
+    } catch (e) {
+      alert('一括更新に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!newName) return;
@@ -89,26 +124,121 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm min-h-[150px]">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border shadow-sm">
+        <div className="text-sm font-bold text-slate-600 px-2 flex items-center gap-2">
+          {isBatchMode ? `選択中: ${selectedIds.size}件` : "タグ一覧"}
+        </div>
+        <div className="flex gap-2">
+          {isBatchMode ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsBatchMode(false);
+                  setSelectedIds(new Set());
+                }}
+                className="font-bold text-slate-500"
+              >
+                キャンセル
+              </Button>
+              <Dialog open={isBatchColorDialogOpen} onOpenChange={setIsBatchColorDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    disabled={selectedIds.size === 0}
+                    className="bg-blue-600 hover:bg-blue-700 font-bold gap-2 px-4 shadow-sm"
+                  >
+                    <Palette size={16} /> 色を変更
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border shadow-lg max-w-[320px] rounded-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-slate-900 text-lg">
+                      {selectedIds.size}件のタグを一括変更
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {PRESET_COLORS.map((color) => (
+                        <button
+                          key={color.key}
+                          type="button"
+                          onClick={() => handleBulkColorUpdate(color.key)}
+                          className={cn(
+                            "h-9 w-9 rounded-full transition-all flex items-center justify-center border",
+                            color.solid,
+                            "hover:scale-110 active:scale-95 shadow-sm border-black/5"
+                          )}
+                          disabled={loading}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBatchMode(true)}
+              className="font-bold"
+            >
+              一括編集
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm min-h-[150px]">
         {tags.map((tag) => (
           <div key={tag.id} className="group relative">
-            <Link href={`/tags/${tag.id}`}>
-              <TagBadge
-                name={tag.name}
-                colorKey={tag.color_key}
-                className="text-sm py-2 px-4 cursor-pointer hover:scale-105 hover:shadow-md ring-offset-2"
-              />
-            </Link>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                startEdit(tag);
-              }}
-              className="absolute -top-3 -right-3 bg-white border border-slate-300 rounded-full p-1.5 transition-all shadow-md hover:bg-slate-50 z-20"
+            <div
+              onClick={() => isBatchMode ? toggleSelection(tag.id) : null}
+              className="cursor-pointer"
             >
-              <Settings2 size={14} className="text-slate-700" />
-            </button>
+              {isBatchMode ? (
+                <div className="relative">
+                  <TagBadge
+                    name={tag.name}
+                    colorKey={tag.color_key}
+                    className={cn(
+                      "text-sm py-2 px-4 transition-all duration-200",
+                      selectedIds.has(tag.id)
+                        ? "ring-2 ring-blue-500 scale-105"
+                        : "opacity-40 grayscale-[0.2]"
+                    )}
+                  />
+                  {selectedIds.has(tag.id) && (
+                    <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-0.5 shadow-md">
+                      <CheckCircle2 size={14} />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href={`/tags/${tag.id}`}>
+                  <TagBadge
+                    name={tag.name}
+                    colorKey={tag.color_key}
+                    className="text-sm py-2 px-4 cursor-pointer hover:scale-105 transition-all shadow-sm ring-offset-2"
+                  />
+                </Link>
+              )}
+            </div>
+
+            {!isBatchMode && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  startEdit(tag);
+                }}
+                className="absolute -top-2.5 -right-2.5 bg-white border border-slate-300 rounded-full p-1.5 transition-all shadow-sm hover:bg-slate-50 z-20 text-slate-600"
+              >
+                <Settings2 size={13} />
+              </button>
+            )}
           </div>
         ))}
 
@@ -119,21 +249,23 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
             resetForm();
           }
         }}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="rounded-full border-2 border-dashed border-slate-300 h-10 px-4 text-slate-500 hover:border-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all">
-              <Plus size={18} className="mr-1" /> タグを追加
-            </Button>
-          </DialogTrigger>
+          {!isBatchMode && (
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full border-2 border-dashed border-slate-300 h-10 px-4 text-slate-500 hover:border-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all">
+                <Plus size={18} className="mr-1" /> タグを追加
+              </Button>
+            </DialogTrigger>
+          )}
           <DialogContent
-            className="bg-white border-2 border-slate-400 shadow-2xl"
+            className="bg-white border shadow-xl rounded-xl max-w-[360px]"
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <DialogHeader className="border-b pb-4">
               <DialogTitle className="text-xl text-slate-900">{isEditing ? 'タグを編集' : '新規タグ作成'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-6 py-6">
+            <div className="space-y-6 py-6 font-sans">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-bold text-slate-700">タグ名</Label>
+                <Label htmlFor="name" className="text-sm font-bold text-slate-700 ml-1">タグ名</Label>
                 <Input
                   id="name"
                   value={newName}
@@ -142,21 +274,23 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                   className="border-slate-300 focus:border-slate-500 h-11"
                 />
               </div>
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-slate-700">カラー</Label>
-                <div className="grid grid-cols-4 gap-3">
+
+              <div className="space-y-4">
+                <Label className="text-sm font-bold text-slate-700 ml-1">カラー</Label>
+                <div className="flex flex-wrap justify-center gap-3">
                   {PRESET_COLORS.map((color) => (
                     <button
                       key={color.key}
                       type="button"
                       onClick={() => setNewColor(color.key)}
-                      className={`
-                        h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-800 shadow-sm
-                        ${(color as any).solid}
-                        ${newColor === color.key ? 'ring-2 ring-offset-2 ring-slate-400 scale-105 shadow-md' : 'opacity-80 hover:opacity-100 hover:scale-102'}
-                      `}
+                      className={cn(
+                        "relative h-9 w-9 rounded-full transition-all flex items-center justify-center border shadow-sm border-black/5",
+                        color.solid,
+                        "hover:scale-110 active:scale-95",
+                        newColor === color.key ? "ring-2 ring-offset-2 ring-slate-400 scale-105" : ""
+                      )}
                     >
-                      {color.name}
+                      {newColor === color.key && <CheckCircle2 size={16} className="text-slate-700" />}
                     </button>
                   ))}
                 </div>
@@ -179,7 +313,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                 disabled={loading || !newName}
                 className="px-8 font-bold h-11"
               >
-                {loading ? '保存中...' : (isEditing ? '更新する' : '作成する')}
+                {loading ? '処理中...' : (isEditing ? '更新内容を保存' : 'タグを作成')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -194,3 +328,4 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
     </div>
   );
 }
+
