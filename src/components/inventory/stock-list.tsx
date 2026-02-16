@@ -89,6 +89,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ));
   };
 
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setLocalItems([]);
+  };
+
   // 表示するアイテムの決定
   const displayItems = isEditMode ? localItems : filteredItems;
 
@@ -96,18 +101,31 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     <div className="space-y-3">
       <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 shadow-sm">
         <div className="text-sm font-medium text-slate-600 px-2 flex items-center gap-2">
-          {isEditMode ? "編集モード（順序固定）" : "表示設定"}
+          {isEditMode ? "編集モード" : "表示設定"}
           {isPending && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
         </div>
-        <Button
-          variant={isEditMode ? "default" : "outline"}
-          size="sm"
-          onClick={handleToggleEdit}
-          disabled={isPending}
-          className={cn("h-8 min-w-[80px]", isEditMode && "bg-blue-600 hover:bg-blue-700")}
-        >
-          {isEditMode ? (isPending ? "保存中..." : "保存して終了") : "編集モード"}
-        </Button>
+        <div className="flex gap-2">
+          {isEditMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelEdit}
+              disabled={isPending}
+              className="h-8 text-slate-500 hover:text-slate-700 font-bold"
+            >
+              キャンセル
+            </Button>
+          )}
+          <Button
+            variant={isEditMode ? "default" : "outline"}
+            size="sm"
+            onClick={handleToggleEdit}
+            disabled={isPending}
+            className={cn("h-8 w-[110px] font-bold", isEditMode && "bg-blue-600 hover:bg-blue-700")}
+          >
+            {isEditMode ? (isPending ? "保存中..." : "保存して終了") : "編集モード"}
+          </Button>
+        </div>
       </div>
 
       <FilterPanel className={cn(isEditMode && "opacity-60")}>
