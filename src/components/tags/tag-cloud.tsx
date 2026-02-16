@@ -148,11 +148,12 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                   {PRESET_COLORS.map((color) => (
                     <button
                       key={color.key}
+                      type="button"
                       onClick={() => setNewColor(color.key)}
                       className={`
-                        h-10 rounded-lg border-2 flex items-center justify-center text-xs font-bold transition-all
-                        ${color.bg} ${color.text} ${color.border}
-                        ${newColor === color.key ? 'ring-2 ring-offset-2 ring-slate-600 scale-105 shadow-md border-slate-600' : 'opacity-80 hover:opacity-100 hover:scale-102'}
+                        h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-800 shadow-sm
+                        ${(color as any).solid}
+                        ${newColor === color.key ? 'ring-2 ring-offset-2 ring-slate-400 scale-105 shadow-md' : 'opacity-80 hover:opacity-100 hover:scale-102'}
                       `}
                     >
                       {color.name}

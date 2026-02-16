@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/popover';
 import { TagBadge } from './tag-badge';
 import { createTag } from '@/app/tags/actions';
+import { PRESET_COLORS } from '@/lib/colors';
 
 interface Tag {
   id: string;
@@ -37,6 +38,7 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const [availableTags, setAvailableTags] = React.useState<Tag[]>(allTags);
+  const [selectedColorKey, setSelectedColorKey] = React.useState('slate');
 
   // Sync available tags when allTags prop changes
   React.useEffect(() => {
@@ -53,10 +55,11 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
   const handleCreateTag = async () => {
     if (!inputValue) return;
     try {
-      const newTag = await createTag(inputValue, 'slate');
+      const newTag = await createTag(inputValue, selectedColorKey);
       setAvailableTags([...availableTags, newTag]);
       toggleTag(newTag.id);
       setInputValue('');
+      setSelectedColorKey('slate');
     } catch (e) {
       alert('タグの作成に失敗しました');
     }
@@ -66,8 +69,8 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
 
   const commandInterface = (
     <Command className={cn("bg-white", inline && "border rounded-md")}>
-      <CommandInput 
-        placeholder="タグ名で検索..." 
+      <CommandInput
+        placeholder="タグ名で検索..."
         value={inputValue}
         onValueChange={setInputValue}
         className="h-11"
@@ -77,10 +80,29 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
       <CommandList className={cn("bg-white", inline ? "max-h-[150px]" : "max-h-[200px]")}>
         <CommandEmpty>
           {inputValue ? (
-            <div className="p-2 text-center">
-              <p className="text-sm text-slate-500 mb-2">"{inputValue}" は見つかりません</p>
-              <Button size="sm" variant="secondary" onClick={handleCreateTag} className="w-full">
-                <Plus size={14} className="mr-1" /> "{inputValue}" を新規作成
+            <div className="p-3 text-center border-t border-slate-100 mt-2 bg-slate-50/50">
+              <p className="text-xs font-bold text-slate-500 mb-3 text-left px-1">新規作成: "{inputValue}"</p>
+
+              <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                {PRESET_COLORS.map((color) => (
+                  <button
+                    key={color.key}
+                    type="button"
+                    onClick={() => setSelectedColorKey(color.key)}
+                    className={cn(
+                      "w-7 h-7 rounded-full transition-all flex items-center justify-center shadow-sm",
+                      (color as any).solid,
+                      selectedColorKey === color.key ? "ring-2 ring-offset-1 ring-slate-400 scale-110 shadow-md" : "hover:scale-105 opacity-80 hover:opacity-100"
+                    )}
+                    title={color.name}
+                  >
+                    {selectedColorKey === color.key && <Check size={12} className="text-slate-800 drop-shadow-sm" />}
+                  </button>
+                ))}
+              </div>
+
+              <Button size="sm" onClick={handleCreateTag} className="w-full font-bold shadow-sm">
+                <Plus size={14} className="mr-1" /> この色でタグを作成
               </Button>
             </div>
           ) : (
