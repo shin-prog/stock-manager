@@ -158,6 +158,12 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               </div>
             </Link>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <div className="text-sm text-gray-700">
+                在庫: <span className={cn(
+                  "text-lg font-bold mx-0.5",
+                  item.is_archived ? "text-slate-500" : "text-black"
+                )}>{item.quantity}</span>
+              </div>
               {isEditMode ? (
                 <Select
                   value={item.category_id || 'unclassified'}
@@ -176,12 +182,6 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               ) : (
                 <div className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
               )}
-              <div className="text-sm text-gray-700">
-                在庫: <span className={cn(
-                  "text-lg font-bold mx-0.5",
-                  item.is_archived ? "text-slate-500" : "text-black"
-                )}>{item.quantity}</span>
-              </div>
               {item.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {item.tags.map(tag => (
