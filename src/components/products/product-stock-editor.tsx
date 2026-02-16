@@ -49,7 +49,7 @@ export function ProductStockEditor({ productId, initialQuantity }: ProductStockE
                     </SelectTrigger>
                     <SelectContent className="bg-white max-h-[250px]">
                         {[...Array(101)].map((_, i) => (
-                            <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                            <SelectItem key={i} value={i.toString()}>{i.toString()}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
