@@ -2,15 +2,19 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { InventoryList, InventorySkeleton } from '@/components/inventory/inventory-container';
+import { Package } from 'lucide-react';
 
 export default function InventoryPage() {
   return (
-    <div className="container mx-auto p-4 max-w-lg pb-24">
+    <div className="space-y-6 max-w-lg mx-auto">
       {/* ヘッダー部分 */}
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-bold">在庫一覧</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Package className="text-blue-600" />
+          在庫一覧
+        </h1>
         <Link href="/products/new">
-          <Button size="sm">+ 商品追加</Button>
+          <Button size="sm" className="font-bold">+ 商品追加</Button>
         </Link>
       </div>
 

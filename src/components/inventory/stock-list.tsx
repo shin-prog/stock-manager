@@ -89,6 +89,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ));
   };
 
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setLocalItems([]);
+  };
+
   // 表示するアイテムの決定
   const displayItems = isEditMode ? localItems : filteredItems;
 
@@ -96,18 +101,31 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     <div className="space-y-3">
       <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 shadow-sm">
         <div className="text-sm font-medium text-slate-600 px-2 flex items-center gap-2">
-          {isEditMode ? "編集モード（順序固定）" : "表示設定"}
+          {isEditMode ? "編集モード" : "表示設定"}
           {isPending && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
         </div>
-        <Button
-          variant={isEditMode ? "default" : "outline"}
-          size="sm"
-          onClick={handleToggleEdit}
-          disabled={isPending}
-          className={cn("h-8 min-w-[80px]", isEditMode && "bg-blue-600 hover:bg-blue-700")}
-        >
-          {isEditMode ? (isPending ? "保存中..." : "保存して終了") : "編集モード"}
-        </Button>
+        <div className="flex gap-2">
+          {isEditMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelEdit}
+              disabled={isPending}
+              className="h-8 text-slate-500 hover:text-slate-700 font-bold"
+            >
+              キャンセル
+            </Button>
+          )}
+          <Button
+            variant={isEditMode ? "default" : "outline"}
+            size="sm"
+            onClick={handleToggleEdit}
+            disabled={isPending}
+            className={cn("h-8 w-[110px] font-bold", isEditMode && "bg-blue-600 hover:bg-blue-700")}
+          >
+            {isEditMode ? (isPending ? "保存中..." : "保存して終了") : "編集モード"}
+          </Button>
+        </div>
       </div>
 
       <FilterPanel className={cn(isEditMode && "opacity-60")}>
@@ -158,6 +176,12 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               </div>
             </Link>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <div className="text-sm text-gray-700">
+                在庫: <span className={cn(
+                  "text-lg font-bold mx-0.5",
+                  item.is_archived ? "text-slate-500" : "text-black"
+                )}>{item.quantity}</span>
+              </div>
               {isEditMode ? (
                 <Select
                   value={item.category_id || 'unclassified'}
@@ -176,12 +200,6 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               ) : (
                 <div className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
               )}
-              <div className="text-sm text-gray-700">
-                在庫: <span className={cn(
-                  "text-lg font-bold mx-0.5",
-                  item.is_archived ? "text-slate-500" : "text-black"
-                )}>{item.quantity}</span>
-              </div>
               {item.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {item.tags.map(tag => (

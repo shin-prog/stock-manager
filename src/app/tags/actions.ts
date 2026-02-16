@@ -40,7 +40,7 @@ export async function deleteTag(id: string) {
 
 export async function assignTagsToProduct(productId: string, tagIds: string[]) {
   const supabase = await createClient();
-  
+
   // First, delete existing associations
   await supabase
     .from('product_tags')
@@ -55,7 +55,7 @@ export async function assignTagsToProduct(productId: string, tagIds: string[]) {
 
     if (error) throw new Error(error.message);
   }
-  
+
   revalidatePath(`/products/${productId}`);
   revalidatePath('/products');
 }
@@ -70,3 +70,15 @@ export async function getProductTags(productId: string) {
   if (error) throw new Error(error.message);
   return data.map(item => item.tags);
 }
+
+export async function bulkUpdateTagColors(tagIds: string[], colorKey: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('tags')
+    .update({ color_key: colorKey })
+    .in('id', tagIds);
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/tags');
+}
+

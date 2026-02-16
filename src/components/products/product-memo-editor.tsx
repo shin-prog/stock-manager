@@ -41,7 +41,7 @@ export function ProductMemoEditor({ id, initialMemo }: { id: string, initialMemo
     return (
       <div className="bg-amber-50 border border-amber-100 rounded-md p-3 text-sm text-amber-900 mb-6">
         <div className="flex justify-between items-start">
-          <div className="whitespace-pre-wrap">{memo || 'メモを入力してください...'}</div>
+          <div className="whitespace-pre-wrap break-words min-w-0">{memo || 'メモを入力してください...'}</div>
           <Button
             variant="ghost"
             size="sm"

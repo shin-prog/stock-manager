@@ -60,9 +60,6 @@ export async function submitPurchase(formData: SubmitPurchaseData) {
       size_info: line.sizeInfo
     });
     if (lError) throw new Error(lError.message);
-
-    // Update Stock
-    await updateStockQuantity(supabase, line.productId, Number(line.quantity));
   }
 
   revalidatePath('/inventory');

@@ -1,14 +1,14 @@
 export const PRESET_COLORS = [
-  { key: 'slate', name: 'スレート', bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-400' },
-  { key: 'red', name: 'レッド', bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400' },
-  { key: 'orange', name: 'オレンジ', bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400' },
-  { key: 'amber', name: 'アンバー', bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-400' },
-  { key: 'yellow', name: 'イエロー', bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400' },
-  { key: 'green', name: 'グリーン', bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400' },
-  { key: 'blue', name: 'ブルー', bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400' },
-  { key: 'indigo', name: 'インディゴ', bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400' },
-  { key: 'purple', name: 'パープル', bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400' },
-  { key: 'pink', name: 'ピンク', bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400' },
+  { key: 'slate', name: 'スレート', bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-400', solid: 'bg-slate-300' },
+  { key: 'red', name: 'レッド', bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400', solid: 'bg-red-300' },
+  { key: 'orange', name: 'オレンジ', bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400', solid: 'bg-orange-300' },
+  { key: 'amber', name: 'アンバー', bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-400', solid: 'bg-amber-300' },
+  { key: 'yellow', name: 'イエロー', bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400', solid: 'bg-yellow-300' },
+  { key: 'green', name: 'グリーン', bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', solid: 'bg-green-300' },
+  { key: 'blue', name: 'ブルー', bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400', solid: 'bg-blue-300' },
+  { key: 'indigo', name: 'インディゴ', bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400', solid: 'bg-indigo-300' },
+  { key: 'purple', name: 'パープル', bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400', solid: 'bg-purple-300' },
+  { key: 'pink', name: 'ピンク', bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400', solid: 'bg-pink-300' },
 ];
 
 export function getColorClasses(key: string) {
