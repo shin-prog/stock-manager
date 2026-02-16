@@ -3,11 +3,13 @@ import { Store, List, ChevronRight, Settings } from 'lucide-react';
 
 export default function SettingsPage() {
     return (
-        <div className="p-4 safe-area-pt">
-            <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Settings className="text-blue-600" />
-                設定
-            </h1>
+        <div className="space-y-6 max-w-lg mx-auto">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <Settings className="text-blue-600" />
+                    設定
+                </h1>
+            </div>
 
             <div className="space-y-4">
                 <Link
