@@ -43,10 +43,13 @@ export interface PurchaseLine {
   size_info: string | null;
 }
 
+export type StockStatus = 'sufficient' | 'needed' | 'unchecked';
+
 export interface Stock {
   id: string;
   product_id: string;
   quantity: number;
+  stock_status: StockStatus;
   last_updated: string;
 }
 

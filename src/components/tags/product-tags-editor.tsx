@@ -56,16 +56,16 @@ export function ProductTagsEditor({ productId, currentTags, allTags }: ProductTa
     <div className="flex flex-wrap items-center gap-2">
       <TagIcon size={16} className="text-slate-400" />
       {currentTags.map((tag) => (
-        <TagBadge key={tag.id} name={tag.name} colorKey={tag.color_key} />
+        <TagBadge key={tag.id} name={tag.name} colorKey={tag.color_key} className="max-w-[120px]" />
       ))}
-      
+
       <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200">
-            <Plus size={14} className="mr-1" /> タグを編集
+          <Button variant="ghost" size="sm" className="h-8 px-3 text-sm text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200">
+            <Plus size={16} className="mr-1" /> タグを編集
           </Button>
         </DialogTrigger>
-        <DialogContent 
+        <DialogContent
           className="bg-white border-2 border-slate-400 shadow-2xl max-w-[90vw] sm:max-w-md"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
@@ -73,17 +73,17 @@ export function ProductTagsEditor({ productId, currentTags, allTags }: ProductTa
             <DialogTitle className="text-xl">タグの編集</DialogTitle>
           </DialogHeader>
           <div className="py-6">
-            <TagSelector 
-              allTags={allTags} 
-              selectedTagIds={selectedTagIds} 
-              onChange={setSelectedTagIds} 
+            <TagSelector
+              allTags={allTags}
+              selectedTagIds={selectedTagIds}
+              onChange={setSelectedTagIds}
               inline={true}
             />
           </div>
           <DialogFooter className="border-t pt-4">
-            <Button 
-              onClick={handleSave} 
-              disabled={loading} 
+            <Button
+              onClick={handleSave}
+              disabled={loading}
               className="w-full sm:w-auto px-8 font-bold h-11"
             >
               {loading ? '保存中...' : 'タグを更新する'}
@@ -91,6 +91,6 @@ export function ProductTagsEditor({ productId, currentTags, allTags }: ProductTa
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

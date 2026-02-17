@@ -1,6 +1,6 @@
 import { StockList } from "@/components/inventory/stock-list";
 import { createClient } from "@/utils/supabase/server";
-import { Category, Product, Stock } from "@/types";
+import { Category, Product, Stock, StockStatus } from "@/types";
 
 export interface StockItem {
   product_id: string;
@@ -10,6 +10,7 @@ export interface StockItem {
   tags: { id: string, name: string, color_key: string }[];
   quantity: number;
   is_archived: boolean;
+  stock_status: StockStatus;
 }
 
 export async function InventoryList() {
@@ -23,6 +24,7 @@ export async function InventoryList() {
         `
         product_id,
         quantity,
+        stock_status,
         products (
           name,
           category_id,
@@ -67,6 +69,7 @@ export async function InventoryList() {
       tags: tags,
       quantity: item.quantity,
       is_archived: !!item.products?.is_archived,
+      stock_status: (item.stock_status as StockStatus) || 'unchecked',
     };
   });
 

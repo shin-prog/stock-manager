@@ -126,7 +126,7 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
                   selectedTagIds.includes(tag.id) ? "opacity-100" : "opacity-0"
                 )}
               />
-              <TagBadge name={tag.name} colorKey={tag.color_key} />
+              <TagBadge name={tag.name} colorKey={tag.color_key} className="max-w-[120px]" />
             </CommandItem>
           ))}
         </CommandGroup>
@@ -139,7 +139,7 @@ export function TagSelector({ allTags, selectedTagIds, onChange, inline = false 
       <div className="flex flex-wrap gap-1.5 min-h-[2.5rem] p-1 border rounded-md bg-white shadow-sm">
         {selectedTags.map((tag) => (
           <div key={tag.id} className="flex items-center">
-            <TagBadge name={tag.name} colorKey={tag.color_key} className="pr-1" />
+            <TagBadge name={tag.name} colorKey={tag.color_key} className="pr-1 max-w-[120px]" />
             <button
               type="button"
               onClick={() => toggleTag(tag.id)}

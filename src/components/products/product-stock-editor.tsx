@@ -35,8 +35,8 @@ export function ProductStockEditor({ productId, initialQuantity }: ProductStockE
     };
 
     return (
-        <div className="inline-flex items-center gap-2 h-8 px-2 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">在庫</span>
+        <div className="inline-flex items-center gap-2 h-9 px-2.5 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">在庫</span>
 
             <div className="flex items-center gap-1.5">
                 <Select
@@ -44,7 +44,7 @@ export function ProductStockEditor({ productId, initialQuantity }: ProductStockE
                     onValueChange={handleChange}
                     disabled={isPending}
                 >
-                    <SelectTrigger className="h-6 w-auto min-w-[40px] border-none bg-transparent p-0 text-xs font-bold text-slate-700 shadow-none focus:ring-0">
+                    <SelectTrigger className="h-7 w-auto min-w-[40px] border-none bg-transparent p-0 text-sm font-bold text-slate-700 shadow-none focus:ring-0">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white max-h-[250px]">
