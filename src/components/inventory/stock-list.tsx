@@ -252,7 +252,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                     value={item.category_id || 'unclassified'}
                     onValueChange={(val) => handleLocalCategoryChange(item.product_id, val)}
                   >
-                    <SelectTrigger className="h-6 text-[10px] w-auto min-w-[80px] px-2 bg-gray-50 border-gray-300">
+                    <SelectTrigger className="h-6 text-xs w-auto min-w-[80px] px-2 bg-gray-50 border-gray-300">
                       <SelectValue placeholder="カテゴリ" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -263,7 +263,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
+                  <div className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
                 )}
                 {item.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1">
