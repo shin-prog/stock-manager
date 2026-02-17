@@ -23,14 +23,14 @@ function getNextStatus(current: StockStatus): StockStatus {
 
 // ステータスに応じた「在庫:数」部分の背景色クラス
 function getStatusStockBgClass(status: StockStatus): string {
-  const base = "rounded px-1.5 py-0.5";
+  const base = "rounded-md px-2 py-0.5 border text-xs font-medium";
   switch (status) {
     case 'sufficient':
-      return `${base} bg-emerald-100`;
+      return `${base} bg-emerald-50 text-emerald-700 border-emerald-100`;
     case 'needed':
-      return `${base} bg-red-100`;
+      return `${base} bg-red-50 text-red-700 border-red-100`;
     default:
-      return base;
+      return `${base} bg-slate-50 text-slate-500 border-slate-100`;
   }
 }
 
@@ -202,7 +202,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           <div
             key={item.product_id}
             className={cn(
-              "flex items-center justify-between p-3 border rounded-lg shadow-sm transition-all",
+              "flex items-center justify-between p-3 border rounded-lg shadow-sm",
               item.is_archived ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200"
             )}
           >
@@ -216,10 +216,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                 </div>
               </Link>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <div className={cn(
-                  "text-sm text-gray-700 transition-colors",
-                  getStatusStockBgClass(item.stock_status)
-                )}>
+                <div className={getStatusStockBgClass(item.stock_status)}>
                   在庫: <span className={cn(
                     "text-lg font-bold mx-0.5",
                     item.is_archived ? "text-slate-500" : "text-black"
@@ -262,12 +259,12 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               </div>
             </div>
             {isEditMode && (
-              <div className="flex gap-1 shrink-0 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="flex gap-1 shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "!h-7 !w-7 p-0 border transition-colors",
+                    "!h-7 !w-7 p-0 border",
                     statusInfo.className
                   )}
                   onClick={() => handleLocalStatusToggle(item.product_id)}
