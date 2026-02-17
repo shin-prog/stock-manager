@@ -116,7 +116,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
   return (
     <div className="container mx-auto p-4 max-w-lg space-y-8">
       <div className="flex items-center gap-3">
-        <TagBadge name={tag.name} colorKey={tag.color_key} className="text-xl py-1 px-4" />
+        <TagBadge name={tag.name} colorKey={tag.color_key} className="text-xl py-1 px-4 max-w-[60%]" />
         <h1 className="text-2xl font-bold">の商品一覧</h1>
       </div>
 

@@ -10,10 +10,10 @@ interface TagBadgeProps {
 
 export function TagBadge({ name, colorKey, className }: TagBadgeProps) {
   const color = getColorClasses(colorKey);
-  
+
   return (
-    <Badge 
-      variant="outline" 
+    <Badge
+      variant="outline"
       className={cn(
         "font-bold transition-all shadow-xs border-[1.5px]",
         color.bg,
@@ -22,7 +22,7 @@ export function TagBadge({ name, colorKey, className }: TagBadgeProps) {
         className
       )}
     >
-      {name}
+      <span className="truncate">{name}</span>
     </Badge>
   );
 }

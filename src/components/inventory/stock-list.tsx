@@ -272,7 +272,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                         key={tag.id}
                         href={`/tags/${tag.id}`}
                         className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded-full border transition-colors hover:opacity-80",
+                          "text-[9px] px-1.5 py-0.5 rounded-full border transition-colors hover:opacity-80 max-w-[100px] truncate inline-block",
                           getQuietColorClasses(tag.color_key)
                         )}
                       >

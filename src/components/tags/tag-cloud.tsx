@@ -205,7 +205,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                     name={tag.name}
                     colorKey={tag.color_key}
                     className={cn(
-                      "text-sm py-2 px-4 transition-all duration-200",
+                      "text-sm py-2 px-4 transition-all duration-200 max-w-[180px]",
                       selectedIds.has(tag.id)
                         ? "ring-2 ring-blue-500 scale-105"
                         : "opacity-40 grayscale-[0.2]"
@@ -222,7 +222,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                   <TagBadge
                     name={tag.name}
                     colorKey={tag.color_key}
-                    className="text-sm py-2 px-4 cursor-pointer hover:scale-105 transition-all shadow-sm ring-offset-2"
+                    className="text-sm py-2 px-4 cursor-pointer hover:scale-105 transition-all shadow-sm ring-offset-2 max-w-[180px]"
                   />
                 </Link>
               )}
