@@ -15,7 +15,7 @@ export function TagBadge({ name, colorKey, className }: TagBadgeProps) {
     <Badge
       variant="outline"
       className={cn(
-        "font-bold transition-all shadow-xs border-[1.5px]",
+        "font-bold transition-all shadow-xs border-[1.5px] text-xs py-0.5 px-2.5",
         color.bg,
         color.text,
         color.border,

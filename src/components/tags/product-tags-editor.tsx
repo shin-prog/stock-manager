@@ -61,8 +61,8 @@ export function ProductTagsEditor({ productId, currentTags, allTags }: ProductTa
 
       <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200">
-            <Plus size={14} className="mr-1" /> タグを編集
+          <Button variant="ghost" size="sm" className="h-8 px-3 text-sm text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200">
+            <Plus size={16} className="mr-1" /> タグを編集
           </Button>
         </DialogTrigger>
         <DialogContent
@@ -91,6 +91,6 @@ export function ProductTagsEditor({ productId, currentTags, allTags }: ProductTa
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

@@ -31,9 +31,9 @@ export function ProductArchiveToggle({
   };
 
   return (
-    <div className="inline-flex items-center gap-2 h-8 px-2 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
+    <div className="inline-flex items-center gap-2 h-9 px-2.5 bg-slate-100/50 rounded-md border border-slate-200/60 transition-colors hover:bg-slate-100">
       <div className="flex items-center gap-1.5 cursor-pointer" onClick={handleToggle}>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
           継続購入
         </span>
 
