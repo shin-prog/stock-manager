@@ -8,7 +8,7 @@ import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
 import { StockItem } from './inventory-container';
 import { Category, Tag, StockStatus } from '@/types';
-import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon } from "lucide-react";
+import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil } from "lucide-react";
 import { getQuietColorClasses } from '@/lib/colors';
 
 import Link from 'next/link';
@@ -159,34 +159,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 shadow-sm">
-        <div className="text-sm font-medium text-slate-600 px-2 flex items-center gap-2">
-          {isEditMode ? "編集モード" : "表示設定"}
-          {isPending && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
-        </div>
-        <div className="flex gap-2">
-          {isEditMode && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelEdit}
-              disabled={isPending}
-              className="h-8 text-slate-500 hover:text-slate-700 font-bold"
-            >
-              キャンセル
-            </Button>
-          )}
-          <Button
-            variant={isEditMode ? "default" : "outline"}
-            size="sm"
-            onClick={handleToggleEdit}
-            disabled={isPending}
-            className={cn("h-8 w-[110px] font-bold", isEditMode && "bg-blue-600 hover:bg-blue-700")}
-          >
-            {isEditMode ? (isPending ? "保存中..." : "保存して終了") : "編集モード"}
-          </Button>
-        </div>
-      </div>
+
 
       <FilterPanel className={cn(isEditMode && "opacity-60")}>
         <FilterItem label="カテゴリ:">
@@ -324,6 +297,38 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           該当する商品がありません。
         </div>
       )}
+
+      {/* Floating Action Button for Edit Mode */}
+      <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
+        {isEditMode && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleCancelEdit}
+            disabled={isPending}
+            className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-500 border-slate-200 hover:bg-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          >
+            <CloseIcon className="h-6 w-6" />
+          </Button>
+        )}
+        <Button
+          size="icon"
+          onClick={handleToggleEdit}
+          disabled={isPending}
+          className={cn(
+            "h-14 w-14 rounded-full shadow-2xl transition-all duration-300",
+            isEditMode
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95"
+          )}
+        >
+          {isEditMode ? (
+            isPending ? <Loader2 className="h-7 w-7 animate-spin" /> : <Check className="h-7 w-7" />
+          ) : (
+            <Pencil className="h-6 w-6" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
