@@ -39,7 +39,8 @@ export async function InventoryList() {
         )
       `,
       )
-      .order("quantity", { ascending: false }),
+      .order("quantity", { ascending: true })
+      .order("product_id"),
     supabase.from("categories").select("*").order("sort_order"),
   ]);
 

@@ -75,9 +75,14 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
       }
 
       // 2. その中で在庫数でソート
-      return sortOrder === 'desc'
+      const qtyDiff = sortOrder === 'desc'
         ? b.quantity - a.quantity
         : a.quantity - b.quantity;
+
+      if (qtyDiff !== 0) return qtyDiff;
+
+      // 3. 在庫数が同じ場合は商品名でソート（安定性を確保）
+      return a.product_name.localeCompare(b.product_name);
     });
 
   // 編集モードの切り替え
