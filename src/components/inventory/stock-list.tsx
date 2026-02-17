@@ -225,7 +225,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                     value={item.category_id || 'unclassified'}
                     onValueChange={(val) => handleLocalCategoryChange(item.product_id, val)}
                   >
-                    <SelectTrigger className="h-6 text-xs w-auto min-w-[80px] px-2 bg-gray-50 border-gray-300">
+                    <SelectTrigger className="!h-5 text-[11px] w-auto px-1 gap-1 !py-0 bg-gray-50 border-gray-300">
                       <SelectValue placeholder="カテゴリ" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -262,7 +262,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-8 w-8 p-0 border transition-colors",
+                    "!h-7 !w-7 p-0 border transition-colors",
                     statusInfo.className
                   )}
                   onClick={() => handleLocalStatusToggle(item.product_id)}
@@ -272,7 +272,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 w-8 p-0 border-slate-300"
+                  className="!h-7 !w-7 p-0 border-slate-300 text-xs"
                   onClick={() => handleLocalAdjust(item.product_id, -1)}
                   disabled={item.quantity <= 0}
                 >
@@ -281,7 +281,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 w-8 p-0 border-slate-300"
+                  className="!h-7 !w-7 p-0 border-slate-300 text-xs"
                   onClick={() => handleLocalAdjust(item.product_id, 1)}
                 >
                   +1
