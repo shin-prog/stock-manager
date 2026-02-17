@@ -119,7 +119,8 @@ export async function updateProductCategory(productId: string, categoryId: strin
 export async function batchUpdateInventory(updates: {
   productId: string,
   quantityDelta: number,
-  categoryId: string | null
+  categoryId: string | null,
+  stockStatus: string
 }[]) {
   const supabase = await createClient();
 
@@ -145,13 +146,19 @@ export async function batchUpdateInventory(updates: {
   }
 
   // 2. Handle category updates
-  // For simplicity and to ensure correct state, we iterate. 
-  // If performance becomes a bottleneck, this could be optimized with a custom RPC.
   for (const update of updates) {
     await supabase
       .from('products')
       .update({ category_id: update.categoryId })
       .eq('id', update.productId);
+  }
+
+  // 3. Handle stock_status updates
+  for (const update of updates) {
+    await supabase
+      .from('stock')
+      .update({ stock_status: update.stockStatus })
+      .eq('product_id', update.productId);
   }
 
   revalidatePath('/inventory');
