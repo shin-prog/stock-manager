@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TagBadge } from './tag-badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings2, Trash2, Search } from 'lucide-react';
+import { Settings2, Trash2, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { PRESET_COLORS } from '@/lib/colors';
 import { createTag, updateTag, deleteTag, bulkUpdateTagColors } from '@/app/tags/actions';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Palette, CheckCircle2 } from 'lucide-react';
+import { Palette, CheckCircle2, Tag } from 'lucide-react';
 
 interface Tag {
   id: string;
@@ -392,7 +392,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
             onClick={() => setIsDialogOpen(true)}
             className="h-14 w-14 rounded-full shadow-2xl bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95 transition-all duration-300"
           >
-            <Plus className="h-6 w-6" />
+            <Tag className="h-6 w-6" />
           </Button>
         </div>
       )}
