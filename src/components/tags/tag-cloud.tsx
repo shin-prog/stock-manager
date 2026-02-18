@@ -95,6 +95,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
     try {
       await updateTag(isEditing.id, newName, newColor);
       setTags(tags.map(t => t.id === isEditing.id ? { ...t, name: newName, color_key: newColor } : t).sort((a, b) => a.name.localeCompare(b.name)));
+      setIsDialogOpen(false);
       setIsEditing(null);
       resetForm();
     } catch (e) {
@@ -110,6 +111,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
     try {
       await deleteTag(id);
       setTags(tags.filter(t => t.id !== id));
+      setIsDialogOpen(false);
       setIsEditing(null);
     } catch (e) {
       alert('タグの削除に失敗しました');
