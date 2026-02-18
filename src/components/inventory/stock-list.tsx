@@ -174,6 +174,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-300 shadow-lg">
               <SelectItem value="all">すべて</SelectItem>
+              <SelectItem value="未分類">未分類</SelectItem>
               {categories.map(cat => (
                 <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
               ))}
