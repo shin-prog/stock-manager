@@ -87,18 +87,17 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ? stockItems
     : stockItems.filter(item => item.category === selectedCategory))
     .sort((a, b) => {
-      // 1. アーカイブ済みの商品を常に下にする
-      if (a.is_archived !== b.is_archived) {
-        return a.is_archived ? 1 : -1;
-      }
-
-      // 2. 選択されたソート順
+      // 在庫数ソートのみアーカイブ済みを末尾に固定
       if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
+        if (a.is_archived !== b.is_archived) {
+          return a.is_archived ? 1 : -1;
+        }
         const diff = sortOrder === 'qty-asc'
           ? a.quantity - b.quantity
           : b.quantity - a.quantity;
         if (diff !== 0) return diff;
       } else {
+        // 更新日ソートはアーカイブに関係なく日付順
         const ta = a.last_updated ? new Date(a.last_updated).getTime() : 0;
         const tb = b.last_updated ? new Date(b.last_updated).getTime() : 0;
         const diff = sortOrder === 'updated-asc' ? ta - tb : tb - ta;
@@ -285,7 +284,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                   </div>
                 )}
                 {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && (
-                  <div className="text-[10px] text-slate-400 ml-auto shrink-0">
+                  <div className="text-xs text-slate-400 ml-auto shrink-0">
                     更新 {formatUpdatedDate(item.last_updated)}
                   </div>
                 )}
