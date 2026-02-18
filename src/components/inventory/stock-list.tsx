@@ -68,6 +68,7 @@ function getStatusButtonInfo(status: StockStatus) {
 export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
+  const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -82,10 +83,21 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ? `/products/new?categoryId=${selectedCategoryObj.id}`
     : '/products/new';
 
+  const toggleStatusFilter = (status: StockStatus) => {
+    setFilterStatuses(prev =>
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
   // 通常表示用のフィルター済みリスト
   const filteredItems = (selectedCategory === 'all'
     ? stockItems
     : stockItems.filter(item => item.category === selectedCategory))
+    .filter(item => {
+      if (filterStatuses.length === 0) return true;
+      if (item.is_archived) return false;
+      return filterStatuses.includes(item.stock_status);
+    })
     .sort((a, b) => {
       // 在庫数ソートのみアーカイブ済みを末尾に固定
       if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
@@ -189,11 +201,12 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   return (
     <div className="space-y-3">
 
-      <FilterPanel className={cn(isEditMode && "opacity-60")}>
-        <FilterItem label="カテゴリ:">
+      <FilterPanel className={cn("flex-col gap-2", isEditMode && "opacity-60")}>
+        {/* 上段: カテゴリ・並べ替え */}
+        <div className="flex gap-2 w-full">
           <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isEditMode}>
-            <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
-              <SelectValue placeholder="選択" />
+            <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
+              <SelectValue placeholder="カテゴリ" />
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-300 shadow-lg">
               <SelectItem value="all">すべて</SelectItem>
@@ -203,23 +216,42 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               ))}
             </SelectContent>
           </Select>
-        </FilterItem>
+          <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)} disabled={isEditMode}>
+            <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-300 shadow-lg">
+              <SelectItem value="qty-asc">在庫が少ない順</SelectItem>
+              <SelectItem value="qty-desc">在庫が多い順</SelectItem>
+              <SelectItem value="updated-asc">更新が古い順</SelectItem>
+              <SelectItem value="updated-desc">更新が新しい順</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {!isEditMode && (
-          <FilterItem label="順序:">
-            <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-              <SelectTrigger className="w-[130px] h-9 bg-white border-slate-400 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-300 shadow-lg">
-                <SelectItem value="qty-asc">在庫が少ない順</SelectItem>
-                <SelectItem value="qty-desc">在庫が多い順</SelectItem>
-                <SelectItem value="updated-asc">更新が古い順</SelectItem>
-                <SelectItem value="updated-desc">更新が新しい順</SelectItem>
-              </SelectContent>
-            </Select>
-          </FilterItem>
-        )}
+        {/* 下段: 在庫ステータスフィルタ */}
+        <div className="flex gap-2 w-full">
+          {([
+            { status: 'sufficient' as StockStatus, title: '十分',  icon: <Check className="h-4 w-4" />,        active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
+            { status: 'needed'    as StockStatus, title: '要購入', icon: <ShoppingCart className="h-4 w-4" />, active: 'bg-red-100 text-red-700 border-red-300' },
+            { status: 'unchecked' as StockStatus, title: '未判断', icon: <MinusIcon className="h-4 w-4" />,   active: 'bg-slate-100 text-slate-500 border-slate-400' },
+          ]).map(({ status, title, icon, active }) => (
+            <button
+              key={status}
+              title={title}
+              disabled={isEditMode}
+              onClick={() => toggleStatusFilter(status)}
+              className={cn(
+                'flex-1 h-9 flex items-center justify-center rounded-lg border transition-colors',
+                filterStatuses.includes(status)
+                  ? active
+                  : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'
+              )}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
       </FilterPanel>
 
       {displayItems.map((item) => {
