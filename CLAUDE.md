@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Git Workflow
 
 - **作業ブランチは `develop`**。`main` に直接コミットしない。
+- まずdevelopブランチに切り替えてから作業を開始する。
 - `develop` で作業 → `gh pr create --base main --head develop` で PR → マージ。
 - コミットメッセージは**日本語**で書く（例: `feat: 〜を追加`、`fix: 〜を修正`、`perf: 〜を最適化`）。
 
