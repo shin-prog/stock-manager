@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TagBadge } from './tag-badge';
 import { Button } from '@/components/ui/button';
-import { Settings2, Trash2, Search } from 'lucide-react';
+import { Settings2, Trash2, Search, Plus, Pencil, X as CloseIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [isBatchColorDialogOpen, setIsBatchColorDialogOpen] = useState(false);
+  const [isFabOpen, setIsFabOpen] = useState(false);
 
   const toggleSelection = (id: string) => {
     const next = new Set(selectedIds);
@@ -160,84 +161,64 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   return (
     <div className="space-y-6">
       <div className="bg-slate-50 p-3 rounded-xl border shadow-sm space-y-3">
-        <div className="flex justify-between items-center">
-          <div className="text-sm font-bold text-slate-600 px-2 flex items-center gap-2">
-            {isBatchMode ? `選択中: ${selectedIds.size}件` : "タグ一覧"}
+        {isBatchMode && (
+          <div className="text-sm font-bold text-slate-600 px-2">
+            選択中: {selectedIds.size}件
           </div>
-          <div className="flex gap-2">
-            {isBatchMode ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsBatchMode(false);
-                    setSelectedIds(new Set());
-                  }}
-                  className="font-bold text-slate-500"
-                >
-                  キャンセル
-                </Button>
-                <Dialog open={isBatchColorDialogOpen} onOpenChange={setIsBatchColorDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      disabled={selectedIds.size === 0}
-                      className="bg-blue-600 hover:bg-blue-700 font-bold gap-2 px-4 shadow-sm"
-                    >
-                      <Palette size={16} /> 色を変更
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white border shadow-lg max-w-[320px] rounded-xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-slate-900 text-lg">
-                        {selectedIds.size}件のタグを一括変更
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <div className="flex flex-wrap justify-center gap-3">
-                        {PRESET_COLORS.map((color) => (
-                          <button
-                            key={color.key}
-                            type="button"
-                            onClick={() => handleBulkColorUpdate(color.key)}
-                            className={cn(
-                              "h-9 w-9 rounded-full transition-all flex items-center justify-center border",
-                              color.solid,
-                              "hover:scale-110 active:scale-95 shadow-sm border-black/5"
-                            )}
-                            disabled={loading}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchMode(true)}
-                className="font-bold"
-              >
-                一括編集
-              </Button>
-            )}
-          </div>
-        </div>
+        )}
+
+        {/* 一括色変更ダイアログ（FABから開く） */}
+        <Dialog open={isBatchColorDialogOpen} onOpenChange={setIsBatchColorDialogOpen}>
+          <DialogContent className="bg-white border shadow-lg max-w-[320px] rounded-xl">
+            <DialogHeader>
+              <DialogTitle className="text-slate-900 text-lg">
+                {selectedIds.size}件のタグを一括変更
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="flex flex-wrap justify-center gap-3">
+                {PRESET_COLORS.map((color) => (
+                  <button
+                    key={color.key}
+                    type="button"
+                    onClick={() => handleBulkColorUpdate(color.key)}
+                    className={cn(
+                      "h-9 w-9 rounded-full transition-all flex items-center justify-center border",
+                      color.solid,
+                      "hover:scale-110 active:scale-95 shadow-sm border-black/5"
+                    )}
+                    disabled={loading}
+                  />
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {!isBatchMode && (
-          <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t">
-            <div className="flex-1 relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="タグを検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-white border-slate-200 text-sm"
-              />
+          <div className="space-y-2">
+            {/* 検索 + ソート */}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="タグを検索..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 bg-white border-slate-200 text-sm"
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="h-9 px-3 bg-white border border-slate-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400/20"
+              >
+                <option value="name">名前順</option>
+                <option value="color">色順</option>
+                <option value="created">新着順</option>
+              </select>
             </div>
+            {/* 色フィルタ */}
             <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
               <div
                 onClick={() => setFilterColor('all')}
@@ -269,15 +250,6 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                 );
               })}
             </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="h-9 px-3 py-1 bg-white border border-slate-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400/20"
-            >
-              <option value="name">名前順</option>
-              <option value="color">色順</option>
-              <option value="created">新着順</option>
-            </select>
           </div>
         )}
       </div>
@@ -386,17 +358,66 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
       )}
 
       {/* FAB */}
-      {!isBatchMode && (
-        <div className="fixed bottom-24 md:bottom-8 right-6 z-[1000]">
-          <Button
-            size="icon"
-            onClick={() => setIsDialogOpen(true)}
-            className="h-14 w-14 rounded-full shadow-2xl bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95 transition-all duration-300"
-          >
-            <Tag className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
+      <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
+        {isBatchMode ? (
+          // バッチモード: キャンセル + 色を変更
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => { setIsBatchMode(false); setSelectedIds(new Set()); }}
+              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-500 border-slate-200 hover:bg-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-200"
+            >
+              <CloseIcon className="h-6 w-6" />
+            </Button>
+            <Button
+              size="icon"
+              disabled={selectedIds.size === 0}
+              onClick={() => setIsBatchColorDialogOpen(true)}
+              className="h-14 w-14 rounded-full shadow-2xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 disabled:opacity-40"
+            >
+              <Palette className="h-6 w-6" />
+            </Button>
+          </>
+        ) : (
+          // 通常モード: スピードダイアル
+          <>
+            {isFabOpen && (
+              <>
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <span className="text-xs font-medium bg-slate-800 text-white px-2.5 py-1 rounded-full shadow-md whitespace-nowrap">タグを追加</span>
+                  <Button
+                    size="icon"
+                    onClick={() => { setIsDialogOpen(true); setIsFabOpen(false); }}
+                    className="h-12 w-12 rounded-full shadow-lg bg-slate-900 hover:bg-black text-white transition-all"
+                  >
+                    <Tag className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                  <span className="text-xs font-medium bg-slate-800 text-white px-2.5 py-1 rounded-full shadow-md whitespace-nowrap">一括編集</span>
+                  <Button
+                    size="icon"
+                    onClick={() => { setIsBatchMode(true); setIsFabOpen(false); }}
+                    className="h-12 w-12 rounded-full shadow-lg bg-slate-900 hover:bg-black text-white transition-all"
+                  >
+                    <Pencil className="h-5 w-5" />
+                  </Button>
+                </div>
+              </>
+            )}
+            <Button
+              size="icon"
+              onClick={() => setIsFabOpen(v => !v)}
+              className="h-14 w-14 rounded-full shadow-2xl bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95 transition-all duration-300"
+            >
+              {isFabOpen
+                ? <CloseIcon className="h-6 w-6" />
+                : <Plus className="h-6 w-6" />}
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
