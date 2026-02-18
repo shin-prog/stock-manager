@@ -64,6 +64,14 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   // 編集モード用のローカル状態
   const [localItems, setLocalItems] = useState<StockItem[]>([]);
 
+  // 商品追加ボタンのhref（カテゴリフィルタ中はそのカテゴリIDを渡す）
+  const selectedCategoryObj = selectedCategory !== 'all' && selectedCategory !== '未分類'
+    ? categories.find(c => c.name === selectedCategory)
+    : null;
+  const addProductHref = selectedCategoryObj
+    ? `/products/new?categoryId=${selectedCategoryObj.id}`
+    : '/products/new';
+
   // 通常表示用のフィルター済みリスト
   const filteredItems = (selectedCategory === 'all'
     ? stockItems
@@ -165,6 +173,13 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   return (
     <div className="space-y-3">
 
+      {!isEditMode && (
+        <div className="flex justify-end">
+          <Link href={addProductHref}>
+            <Button size="sm" className="font-bold">+ 商品追加</Button>
+          </Link>
+        </div>
+      )}
 
       <FilterPanel className={cn(isEditMode && "opacity-60")}>
         <FilterItem label="カテゴリ:">
