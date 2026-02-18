@@ -102,6 +102,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         return {
           productId: item.product_id,
           quantityDelta: item.quantity - (original?.quantity || 0),
+          newQuantity: item.quantity,
           categoryId: item.category_id,
           stockStatus: item.stock_status
         };

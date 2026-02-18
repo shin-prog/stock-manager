@@ -119,47 +119,49 @@ export async function updateProductCategory(productId: string, categoryId: strin
 export async function batchUpdateInventory(updates: {
   productId: string,
   quantityDelta: number,
+  newQuantity: number,
   categoryId: string | null,
   stockStatus: string
 }[]) {
   const supabase = await createClient();
 
-  // 1. Filter out quantity adjustments
-  const adjustments = updates
-    .filter(u => u.quantityDelta !== 0)
-    .map(u => ({
-      product_id: u.productId,
-      change_amount: u.quantityDelta,
-      reason: 'batch_edit',
-      adjusted_at: new Date().toISOString()
-    }));
+  const quantityUpdates = updates.filter(u => u.quantityDelta !== 0);
+  const now = new Date().toISOString();
 
-  if (adjustments.length > 0) {
-    // Record adjustments in bulk
-    await supabase.from('stock_adjustments').insert(adjustments);
+  const ops: Promise<any>[] = [];
 
-    // Update snapshots - sequentially to avoid race conditions on same products, 
-    // though here they should be unique product IDs.
-    for (const adj of adjustments) {
-      await updateStockQuantity(supabase, adj.product_id, adj.change_amount);
+  // 在庫数変更：調整履歴を一括 INSERT、在庫スナップショットを並列 UPDATE（SELECT 不要）
+  if (quantityUpdates.length > 0) {
+    ops.push(
+      supabase.from('stock_adjustments').insert(
+        quantityUpdates.map(u => ({
+          product_id: u.productId,
+          change_amount: u.quantityDelta,
+          reason: 'batch_edit',
+          adjusted_at: now,
+        }))
+      )
+    );
+    for (const u of quantityUpdates) {
+      ops.push(
+        supabase.from('stock')
+          .update({ quantity: u.newQuantity, last_updated: now })
+          .eq('product_id', u.productId)
+      );
     }
   }
 
-  // 2. Handle category updates
-  for (const update of updates) {
-    await supabase
-      .from('products')
-      .update({ category_id: update.categoryId })
-      .eq('id', update.productId);
+  // カテゴリ・ステータス更新を並列実行
+  for (const u of updates) {
+    ops.push(
+      supabase.from('products').update({ category_id: u.categoryId }).eq('id', u.productId)
+    );
+    ops.push(
+      supabase.from('stock').update({ stock_status: u.stockStatus }).eq('product_id', u.productId)
+    );
   }
 
-  // 3. Handle stock_status updates
-  for (const update of updates) {
-    await supabase
-      .from('stock')
-      .update({ stock_status: update.stockStatus })
-      .eq('product_id', update.productId);
-  }
+  await Promise.all(ops);
 
   revalidatePath('/inventory');
 }
