@@ -283,7 +283,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                     ))}
                   </div>
                 )}
-                {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && (
+                {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && !isEditMode && (
                   <div className="text-xs text-slate-400 ml-auto shrink-0">
                     更新 {formatUpdatedDate(item.last_updated)}
                   </div>
