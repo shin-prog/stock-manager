@@ -127,7 +127,7 @@ export async function batchUpdateInventory(updates: {
   const quantityUpdates = updates.filter(u => u.quantityDelta !== 0);
   const now = new Date().toISOString();
 
-  const ops: Promise<any>[] = [];
+  const ops: PromiseLike<any>[] = [];
 
   // 在庫数変更：調整履歴を一括 INSERT、在庫スナップショットを並列 UPDATE（SELECT 不要）
   if (quantityUpdates.length > 0) {
