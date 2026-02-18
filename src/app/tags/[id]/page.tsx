@@ -29,36 +29,38 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const supabase = await createClient();
 
-  // Fetch tag details
-  const { data: tag } = await supabase
-    .from('tags')
-    .select('*')
-    .eq('id', id)
-    .single();
+  // タグ情報と商品一覧を並列フェッチ
+  const [{ data: tag }, { data: productsData }] = await Promise.all([
+    supabase.from('tags').select('*').eq('id', id).single(),
+    supabase.from('product_tags').select('products(id, name, category_id, is_archived)').eq('tag_id', id),
+  ]);
 
   if (!tag) return <div>タグが見つかりません</div>;
-
-  // Fetch products with this tag, including is_archived and stock
-  const { data: productsData } = await supabase
-    .from('product_tags')
-    .select('products(id, name, category_id, is_archived)')
-    .eq('tag_id', id);
 
   const rawProducts = (productsData?.map(p => p.products as any).filter(Boolean)) || [];
   const productIds = rawProducts.map((p: any) => p.id as string);
 
-  // Fetch stock data separately to avoid nested join issues
-  let stockMap = new Map<string, number>();
-  if (productIds.length > 0) {
-    const { data: stockData } = await supabase
-      .from('stock')
-      .select('product_id, quantity')
-      .in('product_id', productIds);
+  // 在庫と購入履歴を並列フェッチ
+  const [stockRes, linesRes] = productIds.length > 0
+    ? await Promise.all([
+        supabase.from('stock').select('product_id, quantity').in('product_id', productIds),
+        supabase.from('purchase_lines').select(`
+          id,
+          product_id,
+          unit_price,
+          size_info,
+          products (name),
+          purchases (
+            purchased_at,
+            stores (name)
+          )
+        `).in('product_id', productIds).order('purchases(purchased_at)', { ascending: false }),
+      ])
+    : [{ data: [] }, { data: [] }];
 
-    stockMap = new Map(
-      (stockData || []).map(s => [s.product_id, Number(s.quantity)])
-    );
-  }
+  const stockMap = new Map<string, number>(
+    (stockRes.data || []).map((s: any) => [s.product_id, Number(s.quantity)])
+  );
 
   const products: ProductWithStock[] = rawProducts.map((prod: any) => ({
     id: prod.id,
@@ -79,39 +81,19 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
   // Build a map for quick lookup of product info
   const productInfoMap = new Map(products.map(p => [p.id, p]));
 
-  // Fetch aggregated purchase history
-  let history: AggregatedHistoryItem[] = [];
-  if (productIds.length > 0) {
-    const { data: lines } = await supabase
-      .from('purchase_lines')
-      .select(`
-        id,
-        product_id,
-        unit_price,
-        size_info,
-        products (name),
-        purchases (
-          purchased_at,
-          stores (name)
-        )
-      `)
-      .in('product_id', productIds)
-      .order('purchases(purchased_at)', { ascending: false });
-
-    history = lines?.map((line: any) => {
-      const prodInfo = productInfoMap.get(line.product_id);
-      return {
-        id: line.id,
-        date: formatDate(line.purchases?.purchased_at),
-        store: line.purchases?.stores?.name || '(不明)',
-        productName: line.products?.name,
-        productId: line.product_id,
-        price: line.unit_price,
-        sizeInfo: line.size_info,
-        is_archived: prodInfo?.is_archived ?? false,
-      };
-    }) || [];
-  }
+  const history: AggregatedHistoryItem[] = (linesRes.data || []).map((line: any) => {
+    const prodInfo = productInfoMap.get(line.product_id);
+    return {
+      id: line.id,
+      date: formatDate(line.purchases?.purchased_at),
+      store: line.purchases?.stores?.name || '(不明)',
+      productName: line.products?.name,
+      productId: line.product_id,
+      price: line.unit_price,
+      sizeInfo: line.size_info,
+      is_archived: prodInfo?.is_archived ?? false,
+    };
+  });
 
   return (
     <div className="container mx-auto p-4 max-w-lg space-y-8">

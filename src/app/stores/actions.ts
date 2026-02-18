@@ -35,12 +35,9 @@ export async function createStore(formData: FormData) {
 export async function updateStoresOrder(items: { id: string, sort_order: number }[]) {
   const supabase = await createClient();
   
-  for (const item of items) {
-    await supabase
-      .from('stores')
-      .update({ sort_order: item.sort_order })
-      .eq('id', item.id);
-  }
+  await Promise.all(
+    items.map(item => supabase.from('stores').update({ sort_order: item.sort_order }).eq('id', item.id))
+  );
 
   revalidatePath('/stores');
 }

@@ -9,8 +9,8 @@ import { SubmitButton } from './submit-button';
 import { TagSelector } from '@/components/tags/tag-selector';
 import { Category, Tag } from '@/types';
 
-export function ProductForm({ categories, allTags }: { categories: Category[], allTags: Tag[] }) {
-  const [categoryId, setCategoryId] = React.useState('');
+export function ProductForm({ categories, allTags, defaultCategoryId = '' }: { categories: Category[], allTags: Tag[], defaultCategoryId?: string }) {
+  const [categoryId, setCategoryId] = React.useState(defaultCategoryId);
   const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
 
   return (

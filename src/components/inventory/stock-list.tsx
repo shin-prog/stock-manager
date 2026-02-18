@@ -8,7 +8,7 @@ import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
 import { StockItem } from './inventory-container';
 import { Category, Tag, StockStatus } from '@/types';
-import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil } from "lucide-react";
+import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil, Plus } from "lucide-react";
 import { getQuietColorClasses } from '@/lib/colors';
 
 import Link from 'next/link';
@@ -34,6 +34,16 @@ function getStatusStockBgClass(status: StockStatus): string {
   }
 }
 
+function formatUpdatedDate(iso: string | null): string {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.getFullYear() === now.getFullYear()) {
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 // ステータスボタンの表示情報（アイコンのみ）
 function getStatusButtonInfo(status: StockStatus) {
   switch (status) {
@@ -57,31 +67,56 @@ function getStatusButtonInfo(status: StockStatus) {
 
 export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('asc');
+  const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
+  const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // 編集モード用のローカル状態
   const [localItems, setLocalItems] = useState<StockItem[]>([]);
 
+  // 商品追加ボタンのhref（カテゴリフィルタ中はそのカテゴリIDを渡す）
+  const selectedCategoryObj = selectedCategory !== 'all' && selectedCategory !== '未分類'
+    ? categories.find(c => c.name === selectedCategory)
+    : null;
+  const addProductHref = selectedCategoryObj
+    ? `/products/new?categoryId=${selectedCategoryObj.id}`
+    : '/products/new';
+
+  const toggleStatusFilter = (status: StockStatus) => {
+    setFilterStatuses(prev =>
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
   // 通常表示用のフィルター済みリスト
   const filteredItems = (selectedCategory === 'all'
     ? stockItems
     : stockItems.filter(item => item.category === selectedCategory))
+    .filter(item => {
+      if (filterStatuses.length === 0) return true;
+      if (item.is_archived) return false;
+      return filterStatuses.includes(item.stock_status);
+    })
     .sort((a, b) => {
-      // 1. アーカイブ済みの商品を常に下にする
-      if (a.is_archived !== b.is_archived) {
-        return a.is_archived ? 1 : -1;
+      // 在庫数ソートのみアーカイブ済みを末尾に固定
+      if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
+        if (a.is_archived !== b.is_archived) {
+          return a.is_archived ? 1 : -1;
+        }
+        const diff = sortOrder === 'qty-asc'
+          ? a.quantity - b.quantity
+          : b.quantity - a.quantity;
+        if (diff !== 0) return diff;
+      } else {
+        // 更新日ソートはアーカイブに関係なく日付順
+        const ta = a.last_updated ? new Date(a.last_updated).getTime() : 0;
+        const tb = b.last_updated ? new Date(b.last_updated).getTime() : 0;
+        const diff = sortOrder === 'updated-asc' ? ta - tb : tb - ta;
+        if (diff !== 0) return diff;
       }
 
-      // 2. その中で在庫数でソート
-      const qtyDiff = sortOrder === 'desc'
-        ? b.quantity - a.quantity
-        : a.quantity - b.quantity;
-
-      if (qtyDiff !== 0) return qtyDiff;
-
-      // 3. 在庫数が同じ場合は商品名でソート（安定性を確保）
+      // 3. 同値の場合は商品名でソート（安定性を確保）
       return a.product_name.localeCompare(b.product_name);
     });
 
@@ -94,6 +129,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         return {
           productId: item.product_id,
           quantityDelta: item.quantity - (original?.quantity || 0),
+          newQuantity: item.quantity,
           categoryId: item.category_id,
           stockStatus: item.stock_status
         };
@@ -165,35 +201,57 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   return (
     <div className="space-y-3">
 
-
-      <FilterPanel className={cn(isEditMode && "opacity-60")}>
-        <FilterItem label="カテゴリ:">
+      <FilterPanel className={cn("flex-col gap-2", isEditMode && "opacity-60")}>
+        {/* 上段: カテゴリ・並べ替え */}
+        <div className="flex gap-2 w-full">
           <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isEditMode}>
-            <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
-              <SelectValue placeholder="選択" />
+            <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
+              <SelectValue placeholder="カテゴリ" />
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-300 shadow-lg">
               <SelectItem value="all">すべて</SelectItem>
+              <SelectItem value="未分類">未分類</SelectItem>
               {categories.map(cat => (
                 <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </FilterItem>
+          <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)} disabled={isEditMode}>
+            <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-300 shadow-lg">
+              <SelectItem value="qty-asc">在庫が少ない順</SelectItem>
+              <SelectItem value="qty-desc">在庫が多い順</SelectItem>
+              <SelectItem value="updated-asc">更新が古い順</SelectItem>
+              <SelectItem value="updated-desc">更新が新しい順</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {!isEditMode && (
-          <FilterItem label="順序:">
-            <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-              <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-300 shadow-lg">
-                <SelectItem value="desc">多い順</SelectItem>
-                <SelectItem value="asc">少ない順</SelectItem>
-              </SelectContent>
-            </Select>
-          </FilterItem>
-        )}
+        {/* 下段: 在庫ステータスフィルタ */}
+        <div className="flex gap-2 w-full">
+          {([
+            { status: 'sufficient' as StockStatus, title: '十分',  icon: <Check className="h-4 w-4" />,        active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
+            { status: 'needed'    as StockStatus, title: '要購入', icon: <ShoppingCart className="h-4 w-4" />, active: 'bg-red-100 text-red-700 border-red-300' },
+            { status: 'unchecked' as StockStatus, title: '未判断', icon: <MinusIcon className="h-4 w-4" />,   active: 'bg-slate-100 text-slate-500 border-slate-400' },
+          ]).map(({ status, title, icon, active }) => (
+            <button
+              key={status}
+              title={title}
+              disabled={isEditMode}
+              onClick={() => toggleStatusFilter(status)}
+              className={cn(
+                'flex-1 h-9 flex items-center justify-center rounded-lg border transition-colors',
+                filterStatuses.includes(status)
+                  ? active
+                  : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'
+              )}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
       </FilterPanel>
 
       {displayItems.map((item) => {
@@ -209,7 +267,8 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             <div className="flex-1 min-w-0 pr-2">
               <Link href={`/products/${item.product_id}`} className="hover:underline block">
                 <div className={cn(
-                  "font-bold text-base leading-tight break-words",
+                  "font-bold text-base leading-tight",
+                  isEditMode ? "truncate" : "break-words",
                   item.is_archived && "text-slate-500"
                 )}>
                   {item.product_name}
@@ -254,6 +313,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                         {tag.name}
                       </Link>
                     ))}
+                  </div>
+                )}
+                {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && !isEditMode && (
+                  <div className="text-xs text-slate-400 ml-auto shrink-0">
+                    更新 {formatUpdatedDate(item.last_updated)}
                   </div>
                 )}
               </div>
@@ -302,7 +366,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
 
       {/* Floating Action Button for Edit Mode */}
       <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
-        {isEditMode && (
+        {isEditMode ? (
           <Button
             variant="outline"
             size="icon"
@@ -312,6 +376,15 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           >
             <CloseIcon className="h-6 w-6" />
           </Button>
+        ) : (
+          <Link href={addProductHref} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <Button
+              size="icon"
+              className="h-12 w-12 rounded-full shadow-2xl bg-slate-900 text-white hover:bg-black hover:scale-110 active:scale-95 transition-all duration-300"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          </Link>
         )}
         <Button
           size="icon"

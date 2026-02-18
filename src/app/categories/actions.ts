@@ -44,9 +44,9 @@ export async function updateCategoryName(id: string, name: string) {
 
 export async function updateCategoriesOrder(items: { id: string, sort_order: number }[]) {
   const supabase = await createClient();
-  for (const item of items) {
-    await supabase.from('categories').update({ sort_order: item.sort_order }).eq('id', item.id);
-  }
+  await Promise.all(
+    items.map(item => supabase.from('categories').update({ sort_order: item.sort_order }).eq('id', item.id))
+  );
   revalidatePath('/categories');
   revalidatePath('/products');
   revalidatePath('/inventory');

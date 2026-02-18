@@ -11,6 +11,7 @@ export interface StockItem {
   quantity: number;
   is_archived: boolean;
   stock_status: StockStatus;
+  last_updated: string | null;
 }
 
 export async function InventoryList() {
@@ -25,6 +26,7 @@ export async function InventoryList() {
         product_id,
         quantity,
         stock_status,
+        last_updated,
         products (
           name,
           category_id,
@@ -71,6 +73,7 @@ export async function InventoryList() {
       quantity: item.quantity,
       is_archived: !!item.products?.is_archived,
       stock_status: (item.stock_status as StockStatus) || 'unchecked',
+      last_updated: item.last_updated || null,
     };
   });
 
