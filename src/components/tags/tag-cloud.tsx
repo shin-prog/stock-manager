@@ -25,10 +25,9 @@ interface Tag {
   name: string;
   color_key: string;
   created_at?: string;
-  updated_at?: string;
 }
 
-type SortOption = 'name' | 'color' | 'created' | 'updated';
+type SortOption = 'name' | 'color' | 'created';
 
 export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   const [tags, setTags] = useState<Tag[]>(initialTags);
@@ -37,7 +36,7 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
   const [newColor, setNewColor] = useState('slate');
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortBy, setSortBy] = useState<SortOption>('color');
   const [filterColor, setFilterColor] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -148,11 +147,6 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
       case 'created': {
         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return dateB - dateA;
-      }
-      case 'updated': {
-        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
         return dateB - dateA;
       }
       default:
@@ -283,61 +277,36 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
               <option value="name">名前順</option>
               <option value="color">色順</option>
               <option value="created">新着順</option>
-              <option value="updated">更新順</option>
             </select>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm min-h-[150px]">
-        {displayTags.map((tag) => (
-          <div key={tag.id} className="group relative">
-            <div
-              onClick={() => isBatchMode ? toggleSelection(tag.id) : null}
-              className="cursor-pointer"
-            >
-              {isBatchMode ? (
-                <div className="relative">
-                  <TagBadge
-                    name={tag.name}
-                    colorKey={tag.color_key}
-                    className={cn(
-                      "text-sm py-2 px-4 transition-all duration-200 max-w-[180px]",
-                      selectedIds.has(tag.id)
-                        ? "ring-2 ring-blue-500 scale-105"
-                        : "opacity-40 grayscale-[0.2]"
-                    )}
-                  />
-                  {selectedIds.has(tag.id) && (
-                    <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-0.5 shadow-md">
-                      <CheckCircle2 size={14} />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link href={`/tags/${tag.id}`}>
-                  <TagBadge
-                    name={tag.name}
-                    colorKey={tag.color_key}
-                    className="text-sm py-2 px-4 cursor-pointer hover:scale-105 transition-all shadow-sm ring-offset-2 max-w-[180px]"
-                  />
-                </Link>
-              )}
+      <div className={cn(
+        "bg-white rounded-xl border border-slate-200 shadow-sm min-h-[150px]",
+        sortBy === 'color' ? "divide-y divide-slate-100" : "flex flex-wrap gap-4 p-4"
+      )}>
+        {sortBy === 'color' ? (
+          // 色順のとき：色ごとにセクション分け
+          PRESET_COLORS.filter(c => displayTags.some(t => t.color_key === c.key)).map(color => (
+            <div key={color.key} className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className={cn("w-3 h-3 rounded-full shrink-0", color.solid)} />
+                <span className="text-xs font-medium text-slate-500">{color.name}</span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {displayTags.filter(t => t.color_key === color.key).map(tag => (
+                  <TagChip key={tag.id} tag={tag} isBatchMode={isBatchMode} selectedIds={selectedIds} toggleSelection={toggleSelection} startEdit={startEdit} />
+                ))}
+              </div>
             </div>
-
-            {!isBatchMode && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  startEdit(tag);
-                }}
-                className="absolute -top-2.5 -right-2.5 bg-white border border-slate-300 rounded-full p-1.5 transition-all shadow-sm hover:bg-slate-50 z-20 text-slate-600"
-              >
-                <Settings2 size={13} />
-              </button>
-            )}
-          </div>
-        ))}
+          ))
+        ) : (
+          // その他のソート：従来のフラット表示
+          displayTags.map(tag => (
+            <TagChip key={tag.id} tag={tag} isBatchMode={isBatchMode} selectedIds={selectedIds} toggleSelection={toggleSelection} startEdit={startEdit} />
+          ))
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -421,6 +390,63 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
         <div className="text-center text-slate-400 py-12">
           タグが登録されていません。
         </div>
+      )}
+    </div>
+  );
+}
+
+function TagChip({ tag, isBatchMode, selectedIds, toggleSelection, startEdit }: {
+  tag: { id: string; name: string; color_key: string };
+  isBatchMode: boolean;
+  selectedIds: Set<string>;
+  toggleSelection: (id: string) => void;
+  startEdit: (tag: any) => void;
+}) {
+  return (
+    <div className="group relative">
+      <div
+        onClick={() => isBatchMode ? toggleSelection(tag.id) : null}
+        className="cursor-pointer"
+      >
+        {isBatchMode ? (
+          <div className="relative">
+            <TagBadge
+              name={tag.name}
+              colorKey={tag.color_key}
+              className={cn(
+                "text-sm py-2 px-4 transition-all duration-200 max-w-[180px]",
+                selectedIds.has(tag.id)
+                  ? "ring-2 ring-blue-500 scale-105"
+                  : "opacity-40 grayscale-[0.2]"
+              )}
+            />
+            {selectedIds.has(tag.id) && (
+              <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-0.5 shadow-md">
+                <CheckCircle2 size={14} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link href={`/tags/${tag.id}`}>
+            <TagBadge
+              name={tag.name}
+              colorKey={tag.color_key}
+              className="text-sm py-2 px-4 cursor-pointer hover:scale-105 transition-all shadow-sm ring-offset-2 max-w-[180px]"
+            />
+          </Link>
+        )}
+      </div>
+
+      {!isBatchMode && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            startEdit(tag);
+          }}
+          className="absolute -top-2.5 -right-2.5 bg-white border border-slate-300 rounded-full p-1.5 transition-all shadow-sm hover:bg-slate-50 z-20 text-slate-600"
+        >
+          <Settings2 size={13} />
+        </button>
       )}
     </div>
   );
