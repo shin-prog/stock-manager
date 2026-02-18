@@ -325,7 +325,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           <Link href={addProductHref} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
             <Button
               size="icon"
-              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:scale-110 active:scale-95 transition-all"
+              className="h-12 w-12 rounded-full shadow-2xl bg-slate-900 text-white hover:bg-black hover:scale-110 active:scale-95 transition-all duration-300"
             >
               <Plus className="h-6 w-6" />
             </Button>
