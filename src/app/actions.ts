@@ -48,19 +48,18 @@ export async function submitPurchase(formData: SubmitPurchaseData) {
 
   if (pError) throw new Error(pError.message);
 
-  // 2. Process Lines & Update Stock
-  for (const line of lines) {
-    // Insert Line
-    const { error: lError } = await supabase.from('purchase_lines').insert({
+  // 2. Process Lines（一括 INSERT）
+  const { error: lError } = await supabase.from('purchase_lines').insert(
+    lines.map(line => ({
       purchase_id: purchase.id,
       product_id: line.productId,
       quantity: line.quantity,
       unit_price: line.price,
       line_cost: line.quantity * line.price,
-      size_info: line.sizeInfo
-    });
-    if (lError) throw new Error(lError.message);
-  }
+      size_info: line.sizeInfo,
+    }))
+  );
+  if (lError) throw new Error(lError.message);
 
   revalidatePath('/inventory');
 }
@@ -176,19 +175,19 @@ export async function setStock(productId: string, newQuantity: number) {
     const delta = newQuantity - oldQuantity;
 
     if (delta !== 0) {
-      // Record Adjustment
-      await supabase.from('stock_adjustments').insert({
-        product_id: productId,
-        change_amount: delta,
-        reason: 'manual_update',
-        adjusted_at: new Date().toISOString()
-      });
-
-      // Update Snapshot
-      await supabase.from('stock').update({
-        quantity: newQuantity,
-        last_updated: new Date().toISOString()
-      }).eq('id', stock.id);
+      const now = new Date().toISOString();
+      await Promise.all([
+        supabase.from('stock_adjustments').insert({
+          product_id: productId,
+          change_amount: delta,
+          reason: 'manual_update',
+          adjusted_at: now,
+        }),
+        supabase.from('stock').update({
+          quantity: newQuantity,
+          last_updated: now,
+        }).eq('id', stock.id),
+      ]);
     }
   } else {
     // Insert new stock
