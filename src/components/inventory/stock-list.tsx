@@ -225,7 +225,8 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             <div className="flex-1 min-w-0 pr-2">
               <Link href={`/products/${item.product_id}`} className="hover:underline block">
                 <div className={cn(
-                  "font-bold text-base leading-tight break-words",
+                  "font-bold text-base leading-tight",
+                  isEditMode ? "truncate" : "break-words",
                   item.is_archived && "text-slate-500"
                 )}>
                   {item.product_name}
