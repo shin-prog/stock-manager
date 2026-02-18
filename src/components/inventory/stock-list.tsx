@@ -34,6 +34,16 @@ function getStatusStockBgClass(status: StockStatus): string {
   }
 }
 
+function formatUpdatedDate(iso: string | null): string {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.getFullYear() === now.getFullYear()) {
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 // ステータスボタンの表示情報（アイコンのみ）
 function getStatusButtonInfo(status: StockStatus) {
   switch (status) {
@@ -57,7 +67,7 @@ function getStatusButtonInfo(status: StockStatus) {
 
 export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('asc');
+  const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -82,14 +92,20 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         return a.is_archived ? 1 : -1;
       }
 
-      // 2. その中で在庫数でソート
-      const qtyDiff = sortOrder === 'desc'
-        ? b.quantity - a.quantity
-        : a.quantity - b.quantity;
+      // 2. 選択されたソート順
+      if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
+        const diff = sortOrder === 'qty-asc'
+          ? a.quantity - b.quantity
+          : b.quantity - a.quantity;
+        if (diff !== 0) return diff;
+      } else {
+        const ta = a.last_updated ? new Date(a.last_updated).getTime() : 0;
+        const tb = b.last_updated ? new Date(b.last_updated).getTime() : 0;
+        const diff = sortOrder === 'updated-asc' ? ta - tb : tb - ta;
+        if (diff !== 0) return diff;
+      }
 
-      if (qtyDiff !== 0) return qtyDiff;
-
-      // 3. 在庫数が同じ場合は商品名でソート（安定性を確保）
+      // 3. 同値の場合は商品名でソート（安定性を確保）
       return a.product_name.localeCompare(b.product_name);
     });
 
@@ -193,12 +209,14 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         {!isEditMode && (
           <FilterItem label="順序:">
             <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-              <SelectTrigger className="w-[110px] h-9 bg-white border-slate-400 text-xs">
+              <SelectTrigger className="w-[130px] h-9 bg-white border-slate-400 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border-slate-300 shadow-lg">
-                <SelectItem value="desc">多い順</SelectItem>
-                <SelectItem value="asc">少ない順</SelectItem>
+                <SelectItem value="qty-asc">在庫が少ない順</SelectItem>
+                <SelectItem value="qty-desc">在庫が多い順</SelectItem>
+                <SelectItem value="updated-asc">更新が古い順</SelectItem>
+                <SelectItem value="updated-desc">更新が新しい順</SelectItem>
               </SelectContent>
             </Select>
           </FilterItem>
@@ -264,6 +282,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                         {tag.name}
                       </Link>
                     ))}
+                  </div>
+                )}
+                {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && (
+                  <div className="text-[10px] text-slate-400 ml-auto shrink-0">
+                    更新 {formatUpdatedDate(item.last_updated)}
                   </div>
                 )}
               </div>
