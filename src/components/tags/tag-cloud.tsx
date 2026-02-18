@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -315,13 +314,6 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
             resetForm();
           }
         }}>
-          {!isBatchMode && (
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="rounded-full border-2 border-dashed border-slate-300 h-10 px-4 text-slate-500 hover:border-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all">
-                <Plus size={18} className="mr-1" /> タグを追加
-              </Button>
-            </DialogTrigger>
-          )}
           <DialogContent
             className="bg-white border shadow-xl rounded-xl max-w-[360px]"
             onOpenAutoFocus={(e) => e.preventDefault()}
@@ -389,6 +381,19 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
       {tags.length === 0 && (
         <div className="text-center text-slate-400 py-12">
           タグが登録されていません。
+        </div>
+      )}
+
+      {/* FAB */}
+      {!isBatchMode && (
+        <div className="fixed bottom-24 md:bottom-8 right-6 z-[1000]">
+          <Button
+            size="icon"
+            onClick={() => setIsDialogOpen(true)}
+            className="h-14 w-14 rounded-full shadow-2xl bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95 transition-all duration-300"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
         </div>
       )}
     </div>
