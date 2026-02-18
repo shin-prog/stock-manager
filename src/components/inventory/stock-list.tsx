@@ -8,7 +8,7 @@ import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
 import { StockItem } from './inventory-container';
 import { Category, Tag, StockStatus } from '@/types';
-import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil } from "lucide-react";
+import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil, Plus } from "lucide-react";
 import { getQuietColorClasses } from '@/lib/colors';
 
 import Link from 'next/link';
@@ -173,14 +173,6 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   return (
     <div className="space-y-3">
 
-      {!isEditMode && (
-        <div className="flex justify-end">
-          <Link href={addProductHref}>
-            <Button size="sm" className="font-bold">+ 商品追加</Button>
-          </Link>
-        </div>
-      )}
-
       <FilterPanel className={cn(isEditMode && "opacity-60")}>
         <FilterItem label="カテゴリ:">
           <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isEditMode}>
@@ -319,7 +311,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
 
       {/* Floating Action Button for Edit Mode */}
       <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
-        {isEditMode && (
+        {isEditMode ? (
           <Button
             variant="outline"
             size="icon"
@@ -329,6 +321,15 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           >
             <CloseIcon className="h-6 w-6" />
           </Button>
+        ) : (
+          <Link href={addProductHref} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <Button
+              size="icon"
+              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:scale-110 active:scale-95 transition-all"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          </Link>
         )}
         <Button
           size="icon"
