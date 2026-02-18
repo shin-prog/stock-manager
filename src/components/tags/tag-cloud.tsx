@@ -158,7 +158,8 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
     }
   });
 
-  const availableColors = Array.from(new Set(tags.map(t => t.color_key)));
+  const usedColorKeys = new Set(tags.map(t => t.color_key));
+  const availableColors = PRESET_COLORS.filter(c => usedColorKeys.has(c.key)).map(c => c.key);
 
   return (
     <div className="space-y-6">
