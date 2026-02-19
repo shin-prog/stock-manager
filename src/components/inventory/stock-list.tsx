@@ -257,7 +257,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               disabled={isEditMode}
               className="h-3.5 w-3.5 accent-slate-600"
             />
-            停止済み
+            購入停止品
           </label>
         </div>
       </FilterPanel>
