@@ -69,6 +69,7 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
   const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -94,29 +95,23 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ? stockItems
     : stockItems.filter(item => item.category === selectedCategory))
     .filter(item => {
+      if (!showArchived && item.is_archived) return false;
       if (filterStatuses.length === 0) return true;
       if (item.is_archived) return false;
       return filterStatuses.includes(item.stock_status);
     })
     .sort((a, b) => {
-      // 在庫数ソートのみアーカイブ済みを末尾に固定
       if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
-        if (a.is_archived !== b.is_archived) {
-          return a.is_archived ? 1 : -1;
-        }
         const diff = sortOrder === 'qty-asc'
           ? a.quantity - b.quantity
           : b.quantity - a.quantity;
         if (diff !== 0) return diff;
       } else {
-        // 更新日ソートはアーカイブに関係なく日付順
         const ta = a.last_updated ? new Date(a.last_updated).getTime() : 0;
         const tb = b.last_updated ? new Date(b.last_updated).getTime() : 0;
         const diff = sortOrder === 'updated-asc' ? ta - tb : tb - ta;
         if (diff !== 0) return diff;
       }
-
-      // 3. 同値の場合は商品名でソート（安定性を確保）
       return a.product_name.localeCompare(b.product_name);
     });
 
@@ -229,8 +224,8 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           </Select>
         </div>
 
-        {/* 下段: 在庫ステータスフィルタ */}
-        <div className="flex gap-2 w-full">
+        {/* 下段: 在庫ステータスフィルタ + 継続購入停止チェックボックス */}
+        <div className="flex gap-2 w-full items-center">
           {([
             { status: 'sufficient' as StockStatus, title: '十分',  icon: <Check className="h-4 w-4" />,        active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
             { status: 'needed'    as StockStatus, title: '要購入', icon: <ShoppingCart className="h-4 w-4" />, active: 'bg-red-100 text-red-700 border-red-300' },
@@ -251,6 +246,19 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
               {icon}
             </button>
           ))}
+          <label className={cn(
+            "flex items-center gap-1.5 cursor-pointer shrink-0 text-xs text-slate-500 select-none",
+            isEditMode && "pointer-events-none opacity-60"
+          )}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              disabled={isEditMode}
+              className="h-3.5 w-3.5 accent-slate-600"
+            />
+            購入停止品
+          </label>
         </div>
       </FilterPanel>
 

@@ -124,7 +124,7 @@ export default async function TagDetailsPage({ params }: { params: Promise<{ id:
                   p.is_archived ? "bg-slate-300" : "bg-slate-400"
                 )} />
                 <span className={cn(
-                  "truncate",
+                  "line-clamp-2 leading-snug",
                   p.is_archived && "text-slate-400"
                 )}>{p.name}</span>
               </div>
