@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { submitPurchase } from '@/app/actions';
-
-import { useTransition } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
 import { Store } from '@/types';
@@ -22,7 +20,10 @@ export function QuickPurchaseForm({
   lastStoreId?: string
 }) {
   const [isPending, startTransition] = useTransition();
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState('');
+  useEffect(() => {
+    setDate(new Date().toISOString().split('T')[0]);
+  }, []);
   const [storeId, setStoreId] = useState(lastStoreId || '');
   const [price, setPrice] = useState<string>('');
   const [sizeInfo, setSizeInfo] = useState('');
