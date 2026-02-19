@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRESET_COLORS } from '@/lib/colors';
 import { createTag, updateTag, deleteTag, bulkUpdateTagColors } from '@/app/tags/actions';
 import Link from 'next/link';
@@ -208,15 +209,16 @@ export function TagCloud({ initialTags }: { initialTags: Tag[] }) {
                   className="pl-9 h-9 bg-white border-slate-200 text-sm"
                 />
               </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="h-9 px-3 bg-white border border-slate-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400/20"
-              >
-                <option value="name">名前順</option>
-                <option value="color">色順</option>
-                <option value="created">新着順</option>
-              </select>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-28 h-9 bg-white border-slate-200 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-300 shadow-lg">
+                  <SelectItem value="color">色順</SelectItem>
+                  <SelectItem value="name">名前順</SelectItem>
+                  <SelectItem value="created">新着順</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {/* 色フィルタ */}
             <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
