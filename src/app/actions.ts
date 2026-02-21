@@ -120,7 +120,9 @@ export async function batchUpdateInventory(updates: {
   quantityDelta: number,
   newQuantity: number,
   categoryId: string | null,
-  stockStatus: string
+  stockStatus: string,
+  stockMode?: 'exact' | 'approximate',
+  approximateQuantity?: 'many' | 'few' | null
 }[]) {
   const supabase = await createClient();
 
@@ -129,7 +131,7 @@ export async function batchUpdateInventory(updates: {
 
   const ops: PromiseLike<any>[] = [];
 
-  // 在庫数変更：調整履歴を一括 INSERT、在庫スナップショットを並列 UPDATE（SELECT 不要）
+  // 在庫数変更履歴を一括 INSERT
   if (quantityUpdates.length > 0) {
     ops.push(
       supabase.from('stock_adjustments').insert(
@@ -141,22 +143,31 @@ export async function batchUpdateInventory(updates: {
         }))
       )
     );
-    for (const u of quantityUpdates) {
-      ops.push(
-        supabase.from('stock')
-          .update({ quantity: u.newQuantity, last_updated: now })
-          .eq('product_id', u.productId)
-      );
-    }
   }
 
-  // カテゴリ・ステータス更新を並列実行
+  // カテゴリ・ステータス・在庫数(モード含む)更新を並列実行
   for (const u of updates) {
+    if (u.categoryId !== undefined) {
+      ops.push(
+        supabase.from('products').update({ category_id: u.categoryId }).eq('id', u.productId)
+      );
+    }
+
+    const stockPayload: any = {
+      stock_status: u.stockStatus,
+      stock_mode: u.stockMode || 'exact',
+      approximate_quantity: u.approximateQuantity || null
+    };
+
+    if (u.quantityDelta !== 0) {
+      stockPayload.quantity = u.newQuantity;
+      stockPayload.last_updated = now;
+    } else if (u.stockMode !== undefined) {
+      stockPayload.last_updated = now;
+    }
+
     ops.push(
-      supabase.from('products').update({ category_id: u.categoryId }).eq('id', u.productId)
-    );
-    ops.push(
-      supabase.from('stock').update({ stock_status: u.stockStatus }).eq('product_id', u.productId)
+      supabase.from('stock').update(stockPayload).eq('product_id', u.productId)
     );
   }
 
@@ -165,35 +176,50 @@ export async function batchUpdateInventory(updates: {
   revalidatePath('/inventory');
 }
 
-export async function setStock(productId: string, newQuantity: number) {
+export async function setStock(
+  productId: string,
+  newQuantity: number,
+  stockMode: 'exact' | 'approximate' = 'exact',
+  approximateQuantity: 'many' | 'few' | null = null
+) {
   const supabase = await createClient();
 
-  const { data: stock } = await supabase.from('stock').select('id, quantity').eq('product_id', productId).single();
+  const { data: stock } = await supabase.from('stock').select('id, quantity, stock_mode, approximate_quantity').eq('product_id', productId).single();
 
   if (stock) {
     const oldQuantity = Number(stock.quantity);
     const delta = newQuantity - oldQuantity;
+    const modeChanged = stock.stock_mode !== stockMode;
+    const approxChanged = stock.approximate_quantity !== approximateQuantity;
 
-    if (delta !== 0) {
+    if (delta !== 0 || modeChanged || approxChanged) {
       const now = new Date().toISOString();
-      await Promise.all([
-        supabase.from('stock_adjustments').insert({
+      const ops = [];
+
+      if (delta !== 0) {
+        ops.push(supabase.from('stock_adjustments').insert({
           product_id: productId,
           change_amount: delta,
           reason: 'manual_update',
           adjusted_at: now,
-        }),
-        supabase.from('stock').update({
-          quantity: newQuantity,
-          last_updated: now,
-        }).eq('id', stock.id),
-      ]);
+        }));
+      }
+
+      ops.push(supabase.from('stock').update({
+        quantity: newQuantity,
+        stock_mode: stockMode,
+        approximate_quantity: approximateQuantity,
+        last_updated: now,
+      }).eq('id', stock.id));
+
+      await Promise.all(ops);
     }
   } else {
-    // Insert new stock
     await (supabase as any).from('stock').insert({
       product_id: productId,
       quantity: newQuantity,
+      stock_mode: stockMode,
+      approximate_quantity: approximateQuantity,
       last_updated: new Date().toISOString()
     });
 
