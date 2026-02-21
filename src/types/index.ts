@@ -44,12 +44,15 @@ export interface PurchaseLine {
 }
 
 export type StockStatus = 'sufficient' | 'needed' | 'unchecked';
-
+export type StockMode = 'exact' | 'approximate';
+export type ApproximateQuantity = 'many' | 'few' | null;
 export interface Stock {
   id: string;
   product_id: string;
   quantity: number;
   stock_status: StockStatus;
+  stock_mode: StockMode;
+  approximate_quantity: ApproximateQuantity;
   last_updated: string;
 }
 

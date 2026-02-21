@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FilterPanel, FilterItem } from '@/components/ui/filter-panel';
 import { cn } from '@/lib/utils';
 import { StockItem } from './inventory-container';
-import { Category, Tag, StockStatus } from '@/types';
+import { Category, Tag, StockStatus, StockMode, ApproximateQuantity } from '@/types';
 import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Pencil, Plus } from "lucide-react";
 import { getQuietColorClasses } from '@/lib/colors';
 
@@ -91,6 +91,15 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   };
 
   // 通常表示用のフィルター済みリスト
+  const getSortValue = (item: StockItem) => {
+    if (item.stock_mode === 'approximate') {
+      if (item.approximate_quantity === 'few') return -1000000;
+      if (item.approximate_quantity === 'many') return 1000000;
+      return 0;
+    }
+    return item.quantity;
+  };
+
   const filteredItems = (selectedCategory === 'all'
     ? stockItems
     : stockItems.filter(item => item.category === selectedCategory))
@@ -102,9 +111,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     })
     .sort((a, b) => {
       if (sortOrder === 'qty-asc' || sortOrder === 'qty-desc') {
+        const valA = getSortValue(a);
+        const valB = getSortValue(b);
         const diff = sortOrder === 'qty-asc'
-          ? a.quantity - b.quantity
-          : b.quantity - a.quantity;
+          ? valA - valB
+          : valB - valA;
         if (diff !== 0) return diff;
       } else {
         const ta = a.last_updated ? new Date(a.last_updated).getTime() : 0;
@@ -126,12 +137,16 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
           quantityDelta: item.quantity - (original?.quantity || 0),
           newQuantity: item.quantity,
           categoryId: item.category_id,
-          stockStatus: item.stock_status
+          stockStatus: item.stock_status,
+          stockMode: item.stock_mode,
+          approximateQuantity: item.approximate_quantity
         };
       }).filter(u =>
         u.quantityDelta !== 0 ||
         u.categoryId !== stockItems.find(s => s.product_id === u.productId)?.category_id ||
-        u.stockStatus !== stockItems.find(s => s.product_id === u.productId)?.stock_status
+        u.stockStatus !== stockItems.find(s => s.product_id === u.productId)?.stock_status ||
+        u.stockMode !== stockItems.find(s => s.product_id === u.productId)?.stock_mode ||
+        u.approximateQuantity !== stockItems.find(s => s.product_id === u.productId)?.approximate_quantity
       );
 
       if (updates.length > 0) {
@@ -185,6 +200,32 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     ));
   };
 
+  const handleLocalModeToggle = (productId: string) => {
+    setLocalItems(prev => prev.map(item => {
+      if (item.product_id !== productId) return item;
+
+      const newMode = item.stock_mode === 'exact' ? 'approximate' : 'exact';
+      return {
+        ...item,
+        stock_mode: newMode,
+        // When switching to approximate, default to 'few' if not already set
+        approximate_quantity: newMode === 'approximate' && !item.approximate_quantity ? 'few' : item.approximate_quantity
+      };
+    }));
+  };
+
+  const handleLocalApproximate = (productId: string, val: ApproximateQuantity) => {
+    setLocalItems(prev => prev.map(item =>
+      item.product_id === productId
+        ? {
+          ...item,
+          approximate_quantity: val, // 不要なトグル（クリックでnullに戻る処理）を削除し、必ず値が入るようにする
+          stock_status: 'unchecked' as StockStatus
+        }
+        : item
+    ));
+  };
+
   const handleCancelEdit = () => {
     setIsEditMode(false);
     setLocalItems([]);
@@ -227,9 +268,9 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         {/* 下段: 在庫ステータスフィルタ + 継続購入停止チェックボックス */}
         <div className="flex gap-2 w-full items-center">
           {([
-            { status: 'sufficient' as StockStatus, title: '十分',  icon: <Check className="h-4 w-4" />,        active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
-            { status: 'needed'    as StockStatus, title: '要購入', icon: <ShoppingCart className="h-4 w-4" />, active: 'bg-red-100 text-red-700 border-red-300' },
-            { status: 'unchecked' as StockStatus, title: '未判断', icon: <MinusIcon className="h-4 w-4" />,   active: 'bg-slate-100 text-slate-500 border-slate-400' },
+            { status: 'sufficient' as StockStatus, title: '十分', icon: <Check className="h-4 w-4" />, active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
+            { status: 'needed' as StockStatus, title: '要購入', icon: <ShoppingCart className="h-4 w-4" />, active: 'bg-red-100 text-red-700 border-red-300' },
+            { status: 'unchecked' as StockStatus, title: '未判断', icon: <MinusIcon className="h-4 w-4" />, active: 'bg-slate-100 text-slate-500 border-slate-400' },
           ]).map(({ status, title, icon, active }) => (
             <button
               key={status}
@@ -283,12 +324,25 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                 </div>
               </Link>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <div className={getStatusStockBgClass(item.stock_status)}>
+                <button
+                  type="button"
+                  onClick={() => isEditMode && handleLocalModeToggle(item.product_id)}
+                  disabled={!isEditMode}
+                  title={isEditMode ? "クリックして管理モード(数/ざっくり)を切り替え" : undefined}
+                  className={cn(
+                    getStatusStockBgClass(item.stock_status),
+                    isEditMode && "cursor-pointer hover:brightness-95 hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 transition-all select-none origin-left active:scale-95"
+                  )}
+                >
                   在庫: <span className={cn(
                     "text-lg font-bold mx-0.5",
                     item.is_archived ? "text-slate-500" : "text-black"
-                  )}>{item.quantity}</span>
-                </div>
+                  )}>
+                    {item.stock_mode === 'approximate'
+                      ? (item.approximate_quantity === 'many' ? '多' : '少')
+                      : item.quantity}
+                  </span>
+                </button>
                 {isEditMode ? (
                   <Select
                     value={item.category_id || 'unclassified'}
@@ -343,23 +397,47 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
                 >
                   {statusInfo.icon}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="!h-7 !w-7 p-0 border-slate-300 text-xs"
-                  onClick={() => handleLocalAdjust(item.product_id, -1)}
-                  disabled={item.quantity <= 0}
-                >
-                  -1
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="!h-7 !w-7 p-0 border-slate-300 text-xs"
-                  onClick={() => handleLocalAdjust(item.product_id, 1)}
-                >
-                  +1
-                </Button>
+
+                {item.stock_mode === 'exact' ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="!h-7 !w-7 p-0 border-slate-300 text-xs"
+                      onClick={() => handleLocalAdjust(item.product_id, -1)}
+                      disabled={item.quantity <= 0}
+                    >
+                      -1
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="!h-7 !w-7 p-0 border-slate-300 text-xs"
+                      onClick={() => handleLocalAdjust(item.product_id, 1)}
+                    >
+                      +1
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'few' && 'bg-slate-200 ring-1 ring-slate-400')}
+                      onClick={() => handleLocalApproximate(item.product_id, 'few')}
+                    >
+                      少
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'many' && 'bg-slate-200 ring-1 ring-slate-400')}
+                      onClick={() => handleLocalApproximate(item.product_id, 'many')}
+                    >
+                      多
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>

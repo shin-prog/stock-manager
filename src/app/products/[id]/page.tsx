@@ -26,7 +26,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     supabase.from('stores').select('*').order('sort_order'),
     supabase.from('tags').select('*').order('name'),
     supabase.from('categories').select('*').order('sort_order'),
-    supabase.from('stock').select('quantity').eq('product_id', id).maybeSingle(),
+    supabase.from('stock').select('quantity, stock_mode, approximate_quantity').eq('product_id', id).maybeSingle(),
     supabase
       .from('purchase_lines')
       .select('purchases(store_id)')
@@ -61,7 +61,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 initialCategoryId={product.category_id}
                 categories={categories || []}
               />
-              <ProductStockEditor productId={id} initialQuantity={currentQuantity} />
+              <ProductStockEditor
+                productId={id}
+                initialQuantity={currentQuantity}
+                initialStockMode={stock?.stock_mode || 'exact'}
+                initialApproximateQuantity={stock?.approximate_quantity || null}
+              />
               <ProductArchiveToggle productId={id} initialIsArchived={!!product.is_archived} />
             </div>
           </div>

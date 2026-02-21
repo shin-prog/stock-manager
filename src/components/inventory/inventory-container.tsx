@@ -11,6 +11,8 @@ export interface StockItem {
   quantity: number;
   is_archived: boolean;
   stock_status: StockStatus;
+  stock_mode: 'exact' | 'approximate';
+  approximate_quantity: 'many' | 'few' | null;
   last_updated: string | null;
 }
 
@@ -26,6 +28,8 @@ export async function InventoryList() {
         product_id,
         quantity,
         stock_status,
+        stock_mode,
+        approximate_quantity,
         last_updated,
         products (
           name,
@@ -73,6 +77,8 @@ export async function InventoryList() {
       quantity: item.quantity,
       is_archived: !!item.products?.is_archived,
       stock_status: (item.stock_status as StockStatus) || 'unchecked',
+      stock_mode: item.stock_mode || 'exact',
+      approximate_quantity: item.approximate_quantity || null,
       last_updated: item.last_updated || null,
     };
   });
