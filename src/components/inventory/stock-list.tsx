@@ -314,15 +314,25 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             )}
           >
             <div className="flex-1 min-w-0 pr-2">
-              <Link href={`/products/${item.product_id}`} className="hover:underline block">
-                <div className={cn(
-                  "font-bold text-base leading-tight",
-                  isEditMode ? "truncate" : "break-words",
-                  item.is_archived && "text-slate-500"
-                )}>
-                  {item.product_name}
+              {isEditMode ? (
+                <div className="block">
+                  <div className={cn(
+                    "font-bold text-base leading-tight truncate",
+                    item.is_archived && "text-slate-500"
+                  )}>
+                    {item.product_name}
+                  </div>
                 </div>
-              </Link>
+              ) : (
+                <Link href={`/products/${item.product_id}`} className="hover:underline block">
+                  <div className={cn(
+                    "font-bold text-base leading-tight break-words",
+                    item.is_archived && "text-slate-500"
+                  )}>
+                    {item.product_name}
+                  </div>
+                </Link>
+              )}
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <button
                   type="button"
