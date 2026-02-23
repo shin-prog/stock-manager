@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const AUTH_COOKIE_NAME = "stock_manager_auth";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const secretKey = process.env.AUTH_SECRET_KEY;
 
