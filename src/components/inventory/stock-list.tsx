@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import { batchUpdateInventory } from '@/app/actions';
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,6 +12,7 @@ import { Loader2, X as CloseIcon, Check, ShoppingCart, Minus as MinusIcon, Penci
 import { getQuietColorClasses } from '@/lib/colors';
 
 import Link from 'next/link';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // 在庫ステータスの循環順序
 const STATUS_CYCLE: StockStatus[] = ['unchecked', 'sufficient', 'needed'];
@@ -68,7 +69,13 @@ function getStatusButtonInfo(status: StockStatus) {
 }
 
 export function StockList({ stockItems, categories, allTags }: { stockItems: StockItem[], categories: Category[], allTags: Tag[] }) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    () => searchParams.get('cat') ?? 'all'
+  );
   const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
   const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -76,7 +83,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
   const [isPending, startTransition] = useTransition();
 
   // スワイプ判定用のローカル状態
-  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
 
   // 編集モード用のローカル状態
@@ -235,10 +242,20 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
     setLocalItems([]);
   };
 
-  // スワイプによるカテゴリ移動
+  // カテゴリ変更時にURLを更新して状態を保持する
+  const changeCategory = (val: string) => {
+    setSelectedCategory(val);
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === 'all') {
+      params.delete('cat');
+    } else {
+      params.set('cat', val);
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
   const navigateCategory = (direction: 1 | -1) => {
     if (isEditMode) return;
-    const categoryList = ['all', '未分類', ...categories.map(c => c.name)];
+    const categoryList = ['all', ...categories.map(c => c.name), '未分類'];
     const currentIndex = categoryList.indexOf(selectedCategory);
     if (currentIndex === -1) return;
 
@@ -251,50 +268,45 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
     }
 
     setSlideDirection(direction === 1 ? 'left' : 'right');
-    setSelectedCategory(categoryList[nextIndex]);
+    changeCategory(categoryList[nextIndex]);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // 編集モード中や、複数指でのタッチは何もしない
-    if (isEditMode || e.touches.length > 1) return;
-    setTouchStartPos({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    });
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartPos || isEditMode) return;
-
-    const touchEndPos = {
-      x: e.changedTouches[0].clientX,
-      y: e.changedTouches[0].clientY
+  // ドキュメントレベルでタッチ検知してどこでもスワイプできるように
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isEditMode || e.touches.length > 1) return;
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
     };
 
-    const dx = touchStartPos.x - touchEndPos.x;
-    const dy = touchStartPos.y - touchEndPos.y;
-
-    // 水平方向の移動が垂直方向より大きく、かつ50px以上の移動の場合
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx > 0) {
-        // 右から左スワイプ -> 次のカテゴリへ
-        navigateCategory(1);
-      } else {
-        // 左から右スワイプ -> 前のカテゴリへ
-        navigateCategory(-1);
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartPosRef.current || isEditMode) return;
+      const dx = touchStartPosRef.current.x - e.changedTouches[0].clientX;
+      const dy = touchStartPosRef.current.y - e.changedTouches[0].clientY;
+      touchStartPosRef.current = null;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+        navigateCategory(dx > 0 ? 1 : -1);
       }
-    }
-    setTouchStartPos(null);
-  };
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+    // navigateCategoryは毎回変わるので、依存配列にしっかり含める
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, selectedCategory, categories]);
 
   // 表示するアイテムの決定
   const displayItems = isEditMode ? localItems : filteredItems;
 
   return (
     <div
-      className="space-y-3 min-h-[60vh] pb-32"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      className="space-y-3 pb-32"
     >
 
       <FilterPanel className={cn("flex-col gap-2", isEditMode && "opacity-60")}>
@@ -304,7 +316,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
             value={selectedCategory}
             onValueChange={(val) => {
               setSlideDirection(null);
-              setSelectedCategory(val);
+              changeCategory(val);
             }}
             disabled={isEditMode}
           >
@@ -313,10 +325,10 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-300 shadow-lg">
               <SelectItem value="all">すべて</SelectItem>
-              <SelectItem value="未分類">未分類</SelectItem>
               {categories.map(cat => (
                 <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
               ))}
+              <SelectItem value="未分類">未分類</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortOrder} onValueChange={(v: 'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc') => setSortOrder(v)} disabled={isEditMode}>
