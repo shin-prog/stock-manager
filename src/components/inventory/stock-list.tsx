@@ -319,7 +319,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
               ))}
             </SelectContent>
           </Select>
-          <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)} disabled={isEditMode}>
+          <Select value={sortOrder} onValueChange={(v: 'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc') => setSortOrder(v)} disabled={isEditMode}>
             <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
               <SelectValue />
             </SelectTrigger>
