@@ -44,6 +44,8 @@ function formatUpdatedDate(iso: string | null): string {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+import { ProductRegistrationDialog } from '@/components/products/product-registration-dialog';
+
 // ステータスボタンの表示情報（アイコンのみ）
 function getStatusButtonInfo(status: StockStatus) {
   switch (status) {
@@ -65,7 +67,7 @@ function getStatusButtonInfo(status: StockStatus) {
   }
 }
 
-export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
+export function StockList({ stockItems, categories, allTags }: { stockItems: StockItem[], categories: Category[], allTags: Tag[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
   const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
@@ -76,13 +78,11 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   // 編集モード用のローカル状態
   const [localItems, setLocalItems] = useState<StockItem[]>([]);
 
-  // 商品追加ボタンのhref（カテゴリフィルタ中はそのカテゴリIDを渡す）
+  // 商品追加ボタンの初期カテゴリ
   const selectedCategoryObj = selectedCategory !== 'all' && selectedCategory !== '未分類'
     ? categories.find(c => c.name === selectedCategory)
     : null;
-  const addProductHref = selectedCategoryObj
-    ? `/products/new?categoryId=${selectedCategoryObj.id}`
-    : '/products/new';
+  const defaultCategoryId = selectedCategoryObj ? selectedCategoryObj.id : undefined;
 
   const toggleStatusFilter = (status: StockStatus) => {
     setFilterStatuses(prev =>
@@ -473,14 +473,13 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             <CloseIcon className="h-6 w-6" />
           </Button>
         ) : (
-          <Link href={addProductHref} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full shadow-2xl bg-slate-900 text-white hover:bg-black hover:scale-110 active:scale-95 transition-all duration-300"
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          </Link>
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <ProductRegistrationDialog
+              categories={categories}
+              allTags={allTags}
+              defaultCategoryId={defaultCategoryId}
+            />
+          </div>
         )}
         <Button
           size="icon"

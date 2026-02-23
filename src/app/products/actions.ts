@@ -4,39 +4,43 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function createProduct(formData: FormData) {
-  const supabase = await createClient();
+export async function createProduct(formData: FormData): Promise<{ error?: string }> {
+  try {
+    const supabase = await createClient();
 
-  const name = formData.get('name') as string;
-  const categoryId = formData.get('categoryId') as string;
-  const tagIds = formData.getAll('tagIds') as string[];
+    const name = formData.get('name') as string;
+    const categoryId = formData.get('categoryId') as string;
+    const tagIds = formData.getAll('tagIds') as string[];
 
-  const { data: product, error } = await supabase.from('products').insert({
-    name,
-    category_id: categoryId === 'none' || !categoryId ? null : categoryId,
-  }).select().single();
+    const { data: product, error } = await supabase.from('products').insert({
+      name,
+      category_id: categoryId === 'none' || !categoryId ? null : categoryId,
+    }).select().single();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      return { error: error.message };
+    }
 
-  // 在庫レコードとタグを並列で作成
-  await Promise.all([
-    supabase.from('stock').insert({
-      product_id: product.id,
-      quantity: 0,
-      last_updated: new Date().toISOString(),
-    }),
-    tagIds.length > 0
-      ? supabase.from('product_tags').insert(
+    // 在庫レコードとタグを並列で作成
+    await Promise.all([
+      supabase.from('stock').insert({
+        product_id: product.id,
+        quantity: 0,
+        last_updated: new Date().toISOString(),
+      }),
+      tagIds.length > 0
+        ? supabase.from('product_tags').insert(
           tagIds.map(tagId => ({ product_id: product.id, tag_id: tagId }))
         )
-      : Promise.resolve(),
-  ]);
+        : Promise.resolve(),
+    ]);
 
-  revalidatePath('/inventory');
-  revalidatePath('/products');
-  redirect('/inventory');
+    revalidatePath('/inventory');
+    revalidatePath('/products');
+    return {};
+  } catch (e: any) {
+    return { error: e.message || '予期せぬエラーが発生しました' };
+  }
 }
 
 export async function updateProductCategory(id: string, categoryId: string) {
