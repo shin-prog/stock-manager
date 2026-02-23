@@ -44,6 +44,8 @@ function formatUpdatedDate(iso: string | null): string {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+import { ProductRegistrationDialog } from '@/components/products/product-registration-dialog';
+
 // ステータスボタンの表示情報（アイコンのみ）
 function getStatusButtonInfo(status: StockStatus) {
   switch (status) {
@@ -65,7 +67,7 @@ function getStatusButtonInfo(status: StockStatus) {
   }
 }
 
-export function StockList({ stockItems, categories }: { stockItems: StockItem[], categories: Category[] }) {
+export function StockList({ stockItems, categories, allTags }: { stockItems: StockItem[], categories: Category[], allTags: Tag[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'qty-asc' | 'qty-desc' | 'updated-asc' | 'updated-desc'>('qty-asc');
   const [filterStatuses, setFilterStatuses] = useState<StockStatus[]>([]);
@@ -73,16 +75,18 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // スワイプ判定用のローカル状態
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+
   // 編集モード用のローカル状態
   const [localItems, setLocalItems] = useState<StockItem[]>([]);
 
-  // 商品追加ボタンのhref（カテゴリフィルタ中はそのカテゴリIDを渡す）
+  // 商品追加ボタンの初期カテゴリ
   const selectedCategoryObj = selectedCategory !== 'all' && selectedCategory !== '未分類'
     ? categories.find(c => c.name === selectedCategory)
     : null;
-  const addProductHref = selectedCategoryObj
-    ? `/products/new?categoryId=${selectedCategoryObj.id}`
-    : '/products/new';
+  const defaultCategoryId = selectedCategoryObj ? selectedCategoryObj.id : undefined;
 
   const toggleStatusFilter = (status: StockStatus) => {
     setFilterStatuses(prev =>
@@ -231,16 +235,79 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
     setLocalItems([]);
   };
 
+  // スワイプによるカテゴリ移動
+  const navigateCategory = (direction: 1 | -1) => {
+    if (isEditMode) return;
+    const categoryList = ['all', '未分類', ...categories.map(c => c.name)];
+    const currentIndex = categoryList.indexOf(selectedCategory);
+    if (currentIndex === -1) return;
+
+    let nextIndex = currentIndex + direction;
+    // ループ処理
+    if (nextIndex < 0) {
+      nextIndex = categoryList.length - 1;
+    } else if (nextIndex >= categoryList.length) {
+      nextIndex = 0;
+    }
+
+    setSlideDirection(direction === 1 ? 'left' : 'right');
+    setSelectedCategory(categoryList[nextIndex]);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // 編集モード中や、複数指でのタッチは何もしない
+    if (isEditMode || e.touches.length > 1) return;
+    setTouchStartPos({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartPos || isEditMode) return;
+
+    const touchEndPos = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+
+    const dx = touchStartPos.x - touchEndPos.x;
+    const dy = touchStartPos.y - touchEndPos.y;
+
+    // 水平方向の移動が垂直方向より大きく、かつ50px以上の移動の場合
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx > 0) {
+        // 右から左スワイプ -> 次のカテゴリへ
+        navigateCategory(1);
+      } else {
+        // 左から右スワイプ -> 前のカテゴリへ
+        navigateCategory(-1);
+      }
+    }
+    setTouchStartPos(null);
+  };
+
   // 表示するアイテムの決定
   const displayItems = isEditMode ? localItems : filteredItems;
 
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
 
       <FilterPanel className={cn("flex-col gap-2", isEditMode && "opacity-60")}>
         {/* 上段: カテゴリ・並べ替え */}
         <div className="flex gap-2 w-full">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isEditMode}>
+          <Select
+            value={selectedCategory}
+            onValueChange={(val) => {
+              setSlideDirection(null);
+              setSelectedCategory(val);
+            }}
+            disabled={isEditMode}
+          >
             <SelectTrigger className="flex-1 h-9 bg-white border-slate-400 text-xs">
               <SelectValue placeholder="カテゴリ" />
             </SelectTrigger>
@@ -303,162 +370,172 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
         </div>
       </FilterPanel>
 
-      {displayItems.map((item) => {
-        const statusInfo = getStatusButtonInfo(item.stock_status);
-        return (
-          <div
-            key={item.product_id}
-            className={cn(
-              "flex items-center justify-between p-3 border rounded-lg shadow-sm",
-              item.is_archived ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200"
-            )}
-          >
-            <div className="flex-1 min-w-0 pr-2">
-              {isEditMode ? (
-                <div className="block">
-                  <div className={cn(
-                    "font-bold text-base leading-tight truncate",
-                    item.is_archived && "text-slate-500"
-                  )}>
-                    {item.product_name}
-                  </div>
-                </div>
-              ) : (
-                <Link href={`/products/${item.product_id}`} className="hover:underline block">
-                  <div className={cn(
-                    "font-bold text-base leading-tight break-words",
-                    item.is_archived && "text-slate-500"
-                  )}>
-                    {item.product_name}
-                  </div>
-                </Link>
+      <div
+        key={selectedCategory}
+        className={cn(
+          "space-y-3",
+          slideDirection === 'left' && "animate-in slide-in-from-right-8 fade-in duration-300",
+          slideDirection === 'right' && "animate-in slide-in-from-left-8 fade-in duration-300",
+          slideDirection === null && "animate-in fade-in duration-200"
+        )}
+      >
+        {displayItems.map((item) => {
+          const statusInfo = getStatusButtonInfo(item.stock_status);
+          return (
+            <div
+              key={item.product_id}
+              className={cn(
+                "flex items-center justify-between p-3 border rounded-lg shadow-sm",
+                item.is_archived ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200"
               )}
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => isEditMode && handleLocalModeToggle(item.product_id)}
-                  disabled={!isEditMode}
-                  title={isEditMode ? "クリックして管理モード(数/ざっくり)を切り替え" : undefined}
-                  className={cn(
-                    getStatusStockBgClass(item.stock_status),
-                    isEditMode && "cursor-pointer hover:brightness-95 hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 transition-all select-none origin-left active:scale-95"
-                  )}
-                >
-                  在庫: <span className={cn(
-                    "text-lg font-bold mx-0.5",
-                    item.is_archived ? "text-slate-500" : "text-black"
-                  )}>
-                    {item.stock_mode === 'approximate'
-                      ? (item.approximate_quantity === 'many' ? '多' : '少')
-                      : item.quantity}
-                  </span>
-                </button>
+            >
+              <div className="flex-1 min-w-0 pr-2">
                 {isEditMode ? (
-                  <Select
-                    value={item.category_id || 'unclassified'}
-                    onValueChange={(val) => handleLocalCategoryChange(item.product_id, val)}
+                  <div className="block">
+                    <div className={cn(
+                      "font-bold text-base leading-tight truncate",
+                      item.is_archived && "text-slate-500"
+                    )}>
+                      {item.product_name}
+                    </div>
+                  </div>
+                ) : (
+                  <Link href={`/products/${item.product_id}`} className="hover:underline block">
+                    <div className={cn(
+                      "font-bold text-base leading-tight break-words",
+                      item.is_archived && "text-slate-500"
+                    )}>
+                      {item.product_name}
+                    </div>
+                  </Link>
+                )}
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => isEditMode && handleLocalModeToggle(item.product_id)}
+                    disabled={!isEditMode}
+                    title={isEditMode ? "クリックして管理モード(数/ざっくり)を切り替え" : undefined}
+                    className={cn(
+                      getStatusStockBgClass(item.stock_status),
+                      isEditMode && "cursor-pointer hover:brightness-95 hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 transition-all select-none origin-left active:scale-95"
+                    )}
                   >
-                    <SelectTrigger className="!h-5 text-[11px] w-auto px-1 gap-1 !py-0 bg-gray-50 border-gray-300">
-                      <SelectValue placeholder="カテゴリ" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="unclassified">未分類</SelectItem>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
-                )}
-                {item.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {item.tags.map(tag => (
-                      <Link
-                        key={tag.id}
-                        href={`/tags/${tag.id}`}
-                        className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded-full border transition-colors hover:opacity-80 max-w-[100px] truncate inline-block",
-                          getQuietColorClasses(tag.color_key)
-                        )}
-                      >
-                        {tag.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && !isEditMode && (
-                  <div className="text-xs text-slate-400 ml-auto shrink-0">
-                    更新 {formatUpdatedDate(item.last_updated)}
-                  </div>
-                )}
-              </div>
-            </div>
-            {isEditMode && (
-              <div className="flex gap-1 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "!h-7 !w-7 p-0 border",
-                    statusInfo.className
+                    在庫: <span className={cn(
+                      "text-lg font-bold mx-0.5",
+                      item.is_archived ? "text-slate-500" : "text-black"
+                    )}>
+                      {item.stock_mode === 'approximate'
+                        ? (item.approximate_quantity === 'many' ? '多' : '少')
+                        : item.quantity}
+                    </span>
+                  </button>
+                  {isEditMode ? (
+                    <Select
+                      value={item.category_id || 'unclassified'}
+                      onValueChange={(val) => handleLocalCategoryChange(item.product_id, val)}
+                    >
+                      <SelectTrigger className="!h-5 text-[11px] w-auto px-1 gap-1 !py-0 bg-gray-50 border-gray-300">
+                        <SelectValue placeholder="カテゴリ" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="unclassified">未分類</SelectItem>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{item.category}</div>
                   )}
-                  onClick={() => handleLocalStatusToggle(item.product_id)}
-                >
-                  {statusInfo.icon}
-                </Button>
-
-                {item.stock_mode === 'exact' ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="!h-7 !w-7 p-0 border-slate-300 text-xs"
-                      onClick={() => handleLocalAdjust(item.product_id, -1)}
-                      disabled={item.quantity <= 0}
-                    >
-                      -1
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="!h-7 !w-7 p-0 border-slate-300 text-xs"
-                      onClick={() => handleLocalAdjust(item.product_id, 1)}
-                    >
-                      +1
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'few' && 'bg-slate-200 ring-1 ring-slate-400')}
-                      onClick={() => handleLocalApproximate(item.product_id, 'few')}
-                    >
-                      少
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'many' && 'bg-slate-200 ring-1 ring-slate-400')}
-                      onClick={() => handleLocalApproximate(item.product_id, 'many')}
-                    >
-                      多
-                    </Button>
-                  </>
-                )}
+                  {item.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {item.tags.map(tag => (
+                        <Link
+                          key={tag.id}
+                          href={`/tags/${tag.id}`}
+                          className={cn(
+                            "text-[9px] px-1.5 py-0.5 rounded-full border transition-colors hover:opacity-80 max-w-[100px] truncate inline-block",
+                            getQuietColorClasses(tag.color_key)
+                          )}
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {(sortOrder === 'updated-asc' || sortOrder === 'updated-desc') && !isEditMode && (
+                    <div className="text-xs text-slate-400 ml-auto shrink-0">
+                      更新 {formatUpdatedDate(item.last_updated)}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        );
-      })}
+              {isEditMode && (
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "!h-7 !w-7 p-0 border",
+                      statusInfo.className
+                    )}
+                    onClick={() => handleLocalStatusToggle(item.product_id)}
+                  >
+                    {statusInfo.icon}
+                  </Button>
 
-      {displayItems.length === 0 && (
-        <div className="text-center text-gray-500 py-8">
-          該当する商品がありません。
-        </div>
-      )}
+                  {item.stock_mode === 'exact' ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="!h-7 !w-7 p-0 border-slate-300 text-xs"
+                        onClick={() => handleLocalAdjust(item.product_id, -1)}
+                        disabled={item.quantity <= 0}
+                      >
+                        -1
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="!h-7 !w-7 p-0 border-slate-300 text-xs"
+                        onClick={() => handleLocalAdjust(item.product_id, 1)}
+                      >
+                        +1
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'few' && 'bg-slate-200 ring-1 ring-slate-400')}
+                        onClick={() => handleLocalApproximate(item.product_id, 'few')}
+                      >
+                        少
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn("!h-7 !w-7 p-0 border-slate-300 text-xs", item.approximate_quantity === 'many' && 'bg-slate-200 ring-1 ring-slate-400')}
+                        onClick={() => handleLocalApproximate(item.product_id, 'many')}
+                      >
+                        多
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {displayItems.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            該当する商品がありません。
+          </div>
+        )}
+      </div>
 
       {/* Floating Action Button for Edit Mode */}
       <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
@@ -473,14 +550,13 @@ export function StockList({ stockItems, categories }: { stockItems: StockItem[],
             <CloseIcon className="h-6 w-6" />
           </Button>
         ) : (
-          <Link href={addProductHref} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full shadow-2xl bg-slate-900 text-white hover:bg-black hover:scale-110 active:scale-95 transition-all duration-300"
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          </Link>
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <ProductRegistrationDialog
+              categories={categories}
+              allTags={allTags}
+              defaultCategoryId={defaultCategoryId}
+            />
+          </div>
         )}
         <Button
           size="icon"

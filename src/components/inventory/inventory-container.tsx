@@ -1,6 +1,6 @@
 import { StockList } from "@/components/inventory/stock-list";
 import { createClient } from "@/utils/supabase/server";
-import { Category, Product, Stock, StockStatus } from "@/types";
+import { Category, Product, Stock, StockStatus, Tag } from "@/types";
 
 export interface StockItem {
   product_id: string;
@@ -19,8 +19,8 @@ export interface StockItem {
 export async function InventoryList() {
   const supabase = await createClient();
 
-  // Fetch stock and categories in parallel
-  const [stockRes, categoriesRes] = await Promise.all([
+  // Fetch stock, categories and tags in parallel
+  const [stockRes, categoriesRes, tagsRes] = await Promise.all([
     supabase
       .from("stock")
       .select(
@@ -48,10 +48,12 @@ export async function InventoryList() {
       .order("quantity", { ascending: true })
       .order("product_id"),
     supabase.from("categories").select("*").order("sort_order"),
+    supabase.from("tags").select("*").order("name"),
   ]);
 
   const { data: stockData, error } = stockRes;
   const { data: categoriesData } = categoriesRes;
+  const { data: tagsData } = tagsRes;
 
   if (error || !stockData) {
     console.error(error);
@@ -59,6 +61,7 @@ export async function InventoryList() {
   }
 
   const allCategories = categoriesData as Category[] || [];
+  const allTags = tagsData as Tag[] || [];
   const categoriesMap = new Map<string, string>(
     allCategories.map((c) => [c.id, c.name]),
   );
@@ -91,7 +94,7 @@ export async function InventoryList() {
     );
   }
 
-  return <StockList stockItems={stockItems} categories={allCategories} />;
+  return <StockList stockItems={stockItems} categories={allCategories} allTags={allTags} />;
 }
 
 export function InventorySkeleton() {
