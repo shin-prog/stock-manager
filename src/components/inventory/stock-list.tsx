@@ -292,7 +292,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
 
   return (
     <div
-      className="space-y-3"
+      className="space-y-3 min-h-[60vh] pb-32"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -374,9 +374,9 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
         key={selectedCategory}
         className={cn(
           "space-y-3",
-          slideDirection === 'left' && "animate-in slide-in-from-right-8 fade-in duration-300",
-          slideDirection === 'right' && "animate-in slide-in-from-left-8 fade-in duration-300",
-          slideDirection === null && "animate-in fade-in duration-200"
+          slideDirection === 'left' && "animate-slide-left",
+          slideDirection === 'right' && "animate-slide-right",
+          slideDirection === null && "animate-fade-in-fast"
         )}
       >
         {displayItems.map((item) => {
