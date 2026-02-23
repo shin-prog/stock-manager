@@ -35,7 +35,7 @@ export default function RootLayout({
             <Sidebar />
           </div>
         </aside>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-40 md:pb-8">
+        <main className="flex-1 overflow-y-scroll overflow-x-hidden p-4 md:p-8 pb-40 md:pb-8">
           {children}
         </main>
         <MobileNav />
