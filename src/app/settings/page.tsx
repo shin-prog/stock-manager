@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Store, List, ChevronRight, Settings } from 'lucide-react';
+import { Store, List, ChevronRight, Settings, ClipboardCheck } from 'lucide-react';
 
 export default function SettingsPage() {
     return (
@@ -43,6 +43,25 @@ export default function SettingsPage() {
                     </div>
                     <ChevronRight className="text-slate-300" />
                 </Link>
+
+                <div className="border-t border-slate-100 pt-2">
+                    <p className="text-xs text-slate-400 px-1 pb-2">アプリ設定</p>
+                    <Link
+                        href="/settings/app-settings"
+                        className="flex items-center justify-between p-4 bg-white border rounded-xl shadow-sm hover:bg-slate-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                                <ClipboardCheck size={24} />
+                            </div>
+                            <div>
+                                <div className="font-bold text-slate-800">棚卸し設定</div>
+                                <div className="text-sm text-slate-500">未更新チェックの日数を設定</div>
+                            </div>
+                        </div>
+                        <ChevronRight className="text-slate-300" />
+                    </Link>
+                </div>
             </div>
         </div>
     );
