@@ -236,3 +236,16 @@ export async function setStock(
   revalidatePath('/inventory');
   revalidatePath(`/products/${productId}`);
 }
+
+/** 在庫の最終更新日を現在時刻に更新する（棚卸し確認）*/
+export async function touchStockLastUpdated(productIds: string[]) {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  await Promise.all(
+    productIds.map((id) =>
+      supabase.from('stock').update({ last_updated: now }).eq('product_id', id)
+    )
+  );
+  revalidatePath('/inventory');
+}
+

@@ -46,6 +46,7 @@ function formatUpdatedDate(iso: string | null): string {
 }
 
 import { ProductRegistrationDialog } from '@/components/products/product-registration-dialog';
+import { StaleStockDialog } from '@/components/inventory/stale-stock-dialog';
 
 // ステータスボタンの表示情報（アイコンのみ）
 function getStatusButtonInfo(status: StockStatus) {
@@ -81,6 +82,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
   const [showArchived, setShowArchived] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isStaleDialogOpen, setIsStaleDialogOpen] = useState(false);
 
   // スワイプ判定用のローカル状態
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -342,6 +344,7 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
               <SelectItem value="updated-desc">更新が新しい順</SelectItem>
             </SelectContent>
           </Select>
+          {!isEditMode && <StaleStockDialog stockItems={stockItems} onOpenChange={setIsStaleDialogOpen} />}
         </div>
 
         {/* 下段: 在庫ステータスフィルタ + 継続購入停止チェックボックス */}
@@ -550,44 +553,46 @@ export function StockList({ stockItems, categories, allTags }: { stockItems: Sto
       </div>
 
       {/* Floating Action Button for Edit Mode */}
-      <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-[1000]">
-        {isEditMode ? (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleCancelEdit}
-            disabled={isPending}
-            className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-500 border-slate-200 hover:bg-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-200"
-          >
-            <CloseIcon className="h-6 w-6" />
-          </Button>
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
-            <ProductRegistrationDialog
-              categories={categories}
-              allTags={allTags}
-              defaultCategoryId={defaultCategoryId}
-            />
-          </div>
-        )}
-        <Button
-          size="icon"
-          onClick={handleToggleEdit}
-          disabled={isPending}
-          className={cn(
-            "h-14 w-14 rounded-full shadow-2xl transition-all duration-300",
-            isEditMode
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
-              : "bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95"
-          )}
-        >
+      {!isStaleDialogOpen && (
+        <div className="fixed bottom-24 md:bottom-8 right-6 flex flex-col items-end gap-3 z-40">
           {isEditMode ? (
-            isPending ? <Loader2 className="h-7 w-7 animate-spin" /> : <Check className="h-7 w-7" />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCancelEdit}
+              disabled={isPending}
+              className="h-12 w-12 rounded-full shadow-lg bg-white text-slate-500 border-slate-200 hover:bg-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-200"
+            >
+              <CloseIcon className="h-6 w-6" />
+            </Button>
           ) : (
-            <Pencil className="h-6 w-6" />
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <ProductRegistrationDialog
+                categories={categories}
+                allTags={allTags}
+                defaultCategoryId={defaultCategoryId}
+              />
+            </div>
           )}
-        </Button>
-      </div>
+          <Button
+            size="icon"
+            onClick={handleToggleEdit}
+            disabled={isPending}
+            className={cn(
+              "h-14 w-14 rounded-full shadow-2xl transition-all duration-300",
+              isEditMode
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-slate-900 hover:bg-black text-white hover:scale-110 active:scale-95"
+            )}
+          >
+            {isEditMode ? (
+              isPending ? <Loader2 className="h-7 w-7 animate-spin" /> : <Check className="h-7 w-7" />
+            ) : (
+              <Pencil className="h-6 w-6" />
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
